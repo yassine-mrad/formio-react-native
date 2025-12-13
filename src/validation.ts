@@ -1,0 +1,77 @@
+import { FormioComponent, FormData, ValidationError } from './types';
+
+const isEmpty = (val: any) => val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0);
+
+const safeEval = (code: string, ctx: Record<string, any>) => {
+  try {
+    // eslint-disable-next-line no-new-func
+    const fn = new Function('data', 'row', 'value', 'util', `return (function(){ ${code}; })();`);
+    return fn(ctx.data, ctx.row ?? ctx.data, ctx.value, ctx.util ?? {});
+  } catch (e) {
+    return undefined;
+  }
+};
+
+export const validateField = (component: FormioComponent, value: any): ValidationError[] => {
+  const errors: ValidationError[] = [];
+  const { key, validate = {}, required, label } = component;
+
+  // Required
+  if (required || validate.required) {
+    if (isEmpty(value)) {
+      errors.push({ field: key, message: `${label || key} is required` });
+      return errors;
+    }
+  }
+
+  // String validations
+  if (!isEmpty(value) && typeof value === 'string') {
+    if (validate.minLength !== undefined && value.length < (validate.minLength as number)) {
+      errors.push({ field: key, message: `Minimum length is ${validate.minLength}` });
+    }
+    if (validate.maxLength !== undefined && value.length > (validate.maxLength as number)) {
+      errors.push({ field: key, message: `Maximum length is ${validate.maxLength}` });
+    }
+    if (validate.pattern && !(new RegExp(validate.pattern)).test(value)) {
+      errors.push({ field: key, message: validate.customMessage || 'Invalid format' });
+    }
+  }
+
+  // Number validations
+  if (!isEmpty(value) && typeof value === 'number') {
+    if (validate.min !== undefined && value < (validate.min as number)) {
+      errors.push({ field: key, message: `Minimum value is ${validate.min}` });
+    }
+    if (validate.max !== undefined && value > (validate.max as number)) {
+      errors.push({ field: key, message: `Maximum value is ${validate.max}` });
+    }
+  }
+
+  // Custom validation
+  if (!isEmpty(value) && validate.custom) {
+    const res = safeEval(validate.custom, { value, data: {}, row: {}, util: {} });
+    if (res === false) {
+      errors.push({ field: key, message: validate.customMessage || 'Invalid value' });
+    } else if (typeof res === 'string') {
+      errors.push({ field: key, message: res });
+    }
+  }
+
+  return errors;
+};
+
+export const validateForm = (components: FormioComponent[], data: FormData): ValidationError[] => {
+  const errors: ValidationError[] = [];
+
+  const traverse = (component: FormioComponent) => {
+    // Skip hidden or non-inputs
+    if (component.input !== false && !component.hidden) {
+      const fieldErrors = validateField(component, data[component.key]);
+      errors.push(...fieldErrors);
+    }
+    if (component.components) component.components.forEach(traverse);
+  };
+
+  components.forEach(traverse);
+  return errors;
+};
