@@ -69,7 +69,14 @@ export const validateForm = (components: FormioComponent[], data: FormData): Val
       const fieldErrors = validateField(component, data[component.key]);
       errors.push(...fieldErrors);
     }
+    // Standard containers
     if (component.components) component.components.forEach(traverse);
+    // Columns container
+    if (component.type === 'columns' && Array.isArray((component as any).columns)) {
+      (component as any).columns.forEach((col: any) => {
+        if (Array.isArray(col.components)) col.components.forEach(traverse);
+      });
+    }
   };
 
   components.forEach(traverse);

@@ -1,5 +1,11 @@
 export { FormioForm } from './components/FormioForm';
 export { FormioField } from './components/FormioField';
 export { CheckboxField } from './components/CheckboxField';
+export { DatePicker } from './components/DatePicker';
+export { FileUpload } from './components/FileUpload';
+export { ResourceSelect } from './components/ResourceSelect';
+export { DataGrid } from './components/DataGrid';
+export { EditGrid } from './components/EditGrid';
+export { Wizard } from './components/Wizard';
 export { validateForm, validateField } from './validation';
 export * from './types';

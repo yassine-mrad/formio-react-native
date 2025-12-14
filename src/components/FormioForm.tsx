@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FormioField } from './FormioField';
+import { DatePicker } from './DatePicker';
+import { FileUpload } from './FileUpload';
+import { ResourceSelect } from './ResourceSelect';
+import { DataGrid } from './DataGrid';
+import { EditGrid } from './EditGrid';
+import { Wizard } from './Wizard';
 import { validateForm } from '../validation';
 import { FormProps, FormData, ValidationError, FormioComponent } from '../types';
 
@@ -8,21 +14,34 @@ const isEmpty = (val: any) => val === undefined || val === null || val === '' ||
 
 const safeEval = (code: string, ctx: Record<string, any>) => {
   try {
+    // Support both explicit boolean returns and imperative show assignment
     // eslint-disable-next-line no-new-func
-    const fn = new Function('data', 'row', 'value', 'util', `return (function(){ ${code}; })();`);
-    return fn(ctx.data, ctx.row ?? ctx.data, ctx.value, ctx.util ?? {});
+    const fn = new Function(
+      'data', 'row', 'value', 'util', 'show',
+      `return (function(){\n${code}\nreturn typeof show !== 'undefined' ? show : undefined;\n})();`
+    );
+    return fn(ctx.data, ctx.row ?? ctx.data, ctx.value, ctx.util ?? {}, undefined);
   } catch (e) {
     return undefined;
   }
 };
 
-const flatten = (components: FormioComponent[]): FormioComponent[] => {
-  const out: FormioComponent[] = [];
+const traverseComponents = (components: FormioComponent[], cb: (c: FormioComponent) => void) => {
   const walk = (comp: FormioComponent) => {
-    out.push(comp);
+    cb(comp);
     if (comp.components) comp.components.forEach(walk);
+    if (comp.type === 'columns' && Array.isArray((comp as any).columns)) {
+      (comp as any).columns.forEach((col: any) => {
+        if (Array.isArray(col.components)) col.components.forEach(walk);
+      });
+    }
   };
   components.forEach(walk);
+};
+
+const flatten = (components: FormioComponent[]): FormioComponent[] => {
+  const out: FormioComponent[] = [];
+  traverseComponents(components, (c) => out.push(c));
   return out;
 };
 
@@ -40,12 +59,11 @@ const initDefaults = (components: FormioComponent[], data: FormData): FormData =
 const isHidden = (component: FormioComponent, data: FormData): boolean => {
   if (component.hidden) return true;
   const value = data[component.key];
-  // customConditional JS: returns boolean visible
   if (component.customConditional) {
-    const visible = !!safeEval(component.customConditional, { data, value, row: data, util: {} });
-    return !visible;
+    const res = safeEval(component.customConditional, { data, value, row: data, util: {} });
+    if (typeof res === 'boolean') return !res;
+    if (res !== undefined) return !Boolean(res);
   }
-  // simple conditional
   if (component.conditional && component.conditional.when) {
     const whenVal = data[component.conditional.when];
     const eq = component.conditional.eq;
@@ -131,6 +149,7 @@ export const FormioForm: React.FC<FormProps> = ({
   const renderComponent = (component: FormioComponent): React.ReactNode => {
     if (isHidden(component, formData)) return null;
 
+    // Submit button shortcut
     if (component.type === 'button' && component.key === 'submit') {
       return (
         <TouchableOpacity
@@ -145,6 +164,40 @@ export const FormioForm: React.FC<FormProps> = ({
       );
     }
 
+    // Wizard container
+    if (component.type === 'wizard') {
+      return (
+        <Wizard
+          key={component.key}
+          form={form}
+          // @ts-ignore allow pages inferred from components
+          component={{ ...component, pages: (component as any).pages || (component.components as any) }}
+          data={formData}
+          setData={(d: any) => setFormData(d)}
+          errors={errors}
+          onFinish={handleSubmit}
+        />
+      );
+    }
+
+    // Columns container
+    if (component.type === 'columns' && Array.isArray((component as any).columns)) {
+      const cols = (component as any).columns as Array<{ components: FormioComponent[] }>;
+      return (
+        <View key={component.key} style={styles.columnsContainer}>
+          {component.label ? <Text style={styles.containerLabel}>{component.label}</Text> : null}
+          <View style={styles.columnsRow}>
+            {cols.map((col, i) => (
+              <View key={`${component.key}-col-${i}`} style={styles.column}>
+                {Array.isArray(col.components) ? col.components.map(renderComponent) : null}
+              </View>
+            ))}
+          </View>
+        </View>
+      );
+    }
+
+    // Containers
     if (component.components && component.components.length) {
       const children = component.components.map(renderComponent).filter(Boolean);
       if (children.length === 0) return null;
@@ -176,6 +229,96 @@ export const FormioForm: React.FC<FormProps> = ({
       );
     }
 
+    // Advanced built-ins by type mapping
+    switch (component.type) {
+      case 'date':
+      case 'datetime':
+      case 'time':
+        return (
+          <DatePicker
+            key={component.key}
+            // @ts-ignore
+            component={component as any}
+            value={formData[component.key]}
+            onChange={(val) => handleFieldChange(component.key, val)}
+            error={getFieldError(component.key)}
+            disabled={(component as any).disabled}
+            readOnly={options?.readOnly}
+          />
+        );
+      case 'file':
+        return (
+          <FileUpload
+            key={component.key}
+            // @ts-ignore
+            component={component as any}
+            value={formData[component.key]}
+            onChange={(val) => handleFieldChange(component.key, val)}
+            error={getFieldError(component.key)}
+            disabled={(component as any).disabled}
+            readOnly={options?.readOnly}
+          />
+        );
+      case 'datagrid':
+        return (
+          <DataGrid
+            key={component.key}
+            // @ts-ignore
+            component={component as any}
+            value={formData[component.key]}
+            onChange={(val) => handleFieldChange(component.key, val)}
+            error={getFieldError(component.key)}
+            disabled={(component as any).disabled}
+            readOnly={options?.readOnly}
+          />
+        );
+      case 'editgrid':
+        return (
+          <EditGrid
+            key={component.key}
+            // @ts-ignore
+            component={component as any}
+            value={formData[component.key]}
+            onChange={(val) => handleFieldChange(component.key, val)}
+            error={getFieldError(component.key)}
+            disabled={(component as any).disabled}
+            readOnly={options?.readOnly}
+          />
+        );
+      case 'select': {
+        const ds = (component as any).data?.dataSrc;
+        if (ds === 'url' || ds === 'resource') {
+          return (
+            <ResourceSelect
+              key={component.key}
+              // @ts-ignore
+              component={component as any}
+              value={formData[component.key]}
+              onChange={(val) => handleFieldChange(component.key, val)}
+              error={getFieldError(component.key)}
+              disabled={(component as any).disabled}
+              readOnly={options?.readOnly}
+            />
+          );
+        }
+        break;
+      }
+      case 'PlatformFileInput':
+        return (
+          <FileUpload
+            key={component.key}
+            // @ts-ignore
+            component={component as any}
+            value={formData[component.key]}
+            onChange={(val) => handleFieldChange(component.key, val)}
+            error={getFieldError(component.key)}
+            disabled={(component as any).disabled}
+            readOnly={options?.readOnly}
+          />
+        );
+    }
+
+    // Fallback generic field
     return (
       <FormioField
         key={component.key}
@@ -210,6 +353,16 @@ const styles = StyleSheet.create({
   },
   container: {
     marginBottom: 16,
+  },
+  columnsContainer: {
+    marginBottom: 16,
+  },
+  columnsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  column: {
+    flex: 1,
   },
   containerLabel: {
     fontSize: 18,

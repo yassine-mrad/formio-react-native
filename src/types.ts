@@ -52,6 +52,80 @@ export type FormioComponent = FormioComponentBase & {
   // Additional schema-specific fields can be added here as needed
 };
 
+// Advanced component interfaces
+export interface DateComponent extends FormioComponent {
+  type: 'date' | 'datetime' | 'time';
+  format?: string;
+  enableTime?: boolean;
+  enableDate?: boolean;
+  minDate?: string; // ISO or relative
+  maxDate?: string; // ISO or relative
+  widget?: string; // for parity
+  validate?: ValidateRule & {
+    min?: string; // ISO
+    max?: string; // ISO
+  };
+}
+
+export interface FileComponent extends FormioComponent {
+  type: 'file';
+  storage?: 'base64' | 's3' | 'url' | 'fileSystem';
+  fileTypes?: string[];
+  multiple?: boolean;
+  validate?: ValidateRule & {
+    maxSize?: string; // e.g. 10MB
+  };
+}
+
+export interface ResourceSelectComponent extends FormioComponent {
+  type: 'select';
+  data?: DataSource & {
+    dataSrc: 'url' | 'resource';
+    url?: string;
+    resource?: string;
+    searchField?: string;
+  };
+  searchEnabled?: boolean;
+  debounce?: number;
+  placeholder?: string;
+}
+
+export interface DataGridComponent extends FormioComponent {
+  type: 'datagrid';
+  components: FormioComponent[];
+  minLength?: number;
+  maxLength?: number;
+  validate?: ValidateRule;
+}
+
+export interface EditGridComponent extends FormioComponent {
+  type: 'editgrid';
+  components: FormioComponent[];
+  inlineEdit?: boolean;
+}
+
+// Columns container
+export interface ColumnsComponent extends FormioComponent {
+  type: 'columns';
+  columns: Array<{
+    width?: number;
+    offset?: number;
+    push?: number;
+    pull?: number;
+    components: FormioComponent[];
+  }>;
+}
+
+export interface WizardPage extends FormioComponent {
+  type: 'panel';
+  components: FormioComponent[];
+}
+
+export interface WizardComponent extends FormioComponent {
+  type: 'wizard';
+  pages: WizardPage[];
+}
+
 export interface FormioFormSchema {
   components: FormioComponent[];
   display?: string;
