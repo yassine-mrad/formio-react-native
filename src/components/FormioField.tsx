@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, StyleSheet, Switch } from 'react-native';
 import { CheckboxField } from './CheckboxField';
 import { FormioComponent } from '../types';
+import { FormioTheme } from '../context/FormioContext';
 
 // Optional: If consumer installs @react-native-picker/picker we can lazy import
 let Picker: any = null;
@@ -17,6 +18,7 @@ interface FormioFieldProps {
   value: any;
   onChange: (key: string, value: any) => void;
   error?: string;
+  theme?: FormioTheme;
 }
 
 const getOptions = (component: FormioComponent): Array<{ label: string; value: any }> => {
@@ -27,8 +29,39 @@ const getOptions = (component: FormioComponent): Array<{ label: string; value: a
   return [];
 };
 
-export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onChange, error }) => {
+export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onChange, error, theme }) => {
   const { type, key, label, placeholder, required, disabled } = component;
+
+  const getThemedStyles = () => {
+    return {
+      fieldContainer: {
+        marginBottom: theme?.input?.padding || 16,
+      },
+      label: {
+        fontSize: theme?.label?.fontSize || 16,
+        fontWeight: theme?.label?.fontWeight as any || '500',
+        marginBottom: theme?.label?.marginBottom || 8,
+        color: theme?.colors?.text || '#333',
+      },
+      input: {
+        borderWidth: theme?.input?.borderWidth || 1,
+        borderColor: error ? (theme?.colors?.error || '#e74c3c') : (theme?.colors?.border || '#ddd'),
+        borderRadius: theme?.input?.borderRadius || 8,
+        padding: theme?.input?.padding || 12,
+        fontSize: theme?.input?.fontSize || 16,
+        backgroundColor: disabled 
+          ? (theme?.colors?.disabled || '#f0f0f0')
+          : (theme?.colors?.background || '#fff'),
+      },
+      errorText: {
+        color: theme?.colors?.error || '#e74c3c',
+        fontSize: theme?.error?.fontSize || 14,
+        marginTop: 4,
+      },
+    };
+  };
+
+  const themedStyles = getThemedStyles();
 
   const renderField = () => {
     switch (type) {
@@ -37,7 +70,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       case 'password':
         return (
           <TextInput
-            style={[styles.input, error && styles.inputError, disabled && styles.disabled]}
+            style={[themedStyles.input, disabled && styles.disabled]}
             value={value ?? ''}
             onChangeText={(text) => onChange(key, text)}
             placeholder={placeholder}
@@ -50,7 +83,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       case 'number':
         return (
           <TextInput
-            style={[styles.input, error && styles.inputError, disabled && styles.disabled]}
+            style={[themedStyles.input, disabled && styles.disabled]}
             value={value !== undefined && value !== null ? String(value) : ''}
             onChangeText={(text) => {
               const parsed = parseFloat(text);
@@ -65,7 +98,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       case 'textarea':
         return (
           <TextInput
-            style={[styles.input, styles.textarea, error && styles.inputError, disabled && styles.disabled]}
+            style={[themedStyles.input, styles.textarea, disabled && styles.disabled]}
             value={value ?? ''}
             onChangeText={(text) => onChange(key, text)}
             placeholder={placeholder}
@@ -149,9 +182,9 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
   }
 
   return (
-    <View style={styles.fieldContainer}>
+    <View style={themedStyles.fieldContainer}>
       {label && (
-        <Text style={styles.label}>
+        <Text style={themedStyles.label}>
           {label}
           {required && <Text style={styles.required}> *</Text>}
         </Text>
@@ -160,7 +193,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       {component.description ? (
         <Text style={styles.description}>{component.description}</Text>
       ) : null}
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && <Text style={themedStyles.errorText}>{error}</Text>}
     </View>
   );
 };

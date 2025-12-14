@@ -8,4 +8,6 @@ export { DataGrid } from './components/DataGrid';
 export { EditGrid } from './components/EditGrid';
 export { Wizard } from './components/Wizard';
 export { validateForm, validateField } from './validation';
+export { FormioProvider, useFormioContext } from './context/FormioContext';
+export type { ComponentRenderer, ComponentRenderProps, ComponentOverrides, FormioTheme } from './context/FormioContext';
 export * from './types';

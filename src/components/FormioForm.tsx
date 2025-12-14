@@ -9,6 +9,7 @@ import { EditGrid } from './EditGrid';
 import { Wizard } from './Wizard';
 import { validateForm } from '../validation';
 import { FormProps, FormData, ValidationError, FormioComponent } from '../types';
+import { useFormioContext, ComponentOverrides } from '../context/FormioContext';
 
 const isEmpty = (val: any) => val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0);
 
@@ -100,11 +101,20 @@ export const FormioForm: React.FC<FormProps> = ({
   form,
   data: initialData = {},
   options,
-  components: customComponents,
+  components: propComponents,
   onSubmit,
   onChange,
   onValidation,
 }) => {
+  const context = useFormioContext();
+  
+  // Merge overrides: prop components > context components > built-in
+  const componentOverrides = {
+    ...context?.componentOverrides,
+    ...propComponents
+  };
+  
+  const theme = context?.theme;
   const [formData, setFormData] = useState<FormData>({});
   const [errors, setErrors] = useState<ValidationError[]>([]);
 
@@ -149,12 +159,28 @@ export const FormioForm: React.FC<FormProps> = ({
   const renderComponent = (component: FormioComponent): React.ReactNode => {
     if (isHidden(component, formData)) return null;
 
+    // Check for custom renderer in order of precedence
+    const customRenderer = 
+      componentOverrides?.[component.type] ||
+      componentOverrides?.[component.key]; // Allow key-specific overrides
+
+    if (customRenderer) {
+      return customRenderer(component, {
+        value: formData[component.key],
+        onChange: (value) => handleFieldChange(component.key, value),
+        error: getFieldError(component.key),
+        disabled: component.disabled || false,
+        readOnly: options?.readOnly || false,
+        formData
+      });
+    }
+
     // Submit button shortcut
     if (component.type === 'button' && component.key === 'submit') {
       return (
         <TouchableOpacity
           key={component.key}
-          style={styles.submitButton}
+          style={[styles.submitButton, theme?.colors?.primary && { backgroundColor: theme.colors.primary }]}
           onPress={handleSubmit}
         >
           <Text style={styles.submitButtonText}>
@@ -213,21 +239,7 @@ export const FormioForm: React.FC<FormProps> = ({
 
     if (component.input === false) return null;
 
-    // Custom component override by type
-    const Custom = customComponents?.[component.type];
-    if (Custom) {
-      return (
-        <Custom
-          key={component.key}
-          component={component}
-          value={formData[component.key]}
-          onChange={(val: any) => handleFieldChange(component.key, val)}
-          error={getFieldError(component.key)}
-          data={formData}
-          options={options}
-        />
-      );
-    }
+
 
     // Advanced built-ins by type mapping
     switch (component.type) {
@@ -326,6 +338,7 @@ export const FormioForm: React.FC<FormProps> = ({
         value={formData[component.key]}
         onChange={handleFieldChange}
         error={getFieldError(component.key)}
+        theme={theme}
       />
     );
   };
