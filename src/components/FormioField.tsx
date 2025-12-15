@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, StyleSheet, Switch } from 'react-native';
 import { CheckboxField } from './CheckboxField';
 import { FormioComponent } from '../types';
-import { FormioTheme } from '../context/FormioContext';
+import { useTheme } from '../hooks/useTheme';
 
 // Optional: If consumer installs @react-native-picker/picker we can lazy import
 let Picker: any = null;
@@ -18,7 +18,6 @@ interface FormioFieldProps {
   value: any;
   onChange: (key: string, value: any) => void;
   error?: string;
-  theme?: FormioTheme;
 }
 
 const getOptions = (component: FormioComponent): Array<{ label: string; value: any }> => {
@@ -29,39 +28,37 @@ const getOptions = (component: FormioComponent): Array<{ label: string; value: a
   return [];
 };
 
-export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onChange, error, theme }) => {
+export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onChange, error }) => {
   const { type, key, label, placeholder, required, disabled } = component;
+  const { createStyles, getColor, getComponent } = useTheme();
 
-  const getThemedStyles = () => {
-    return {
-      fieldContainer: {
-        marginBottom: theme?.input?.padding || 16,
-      },
-      label: {
-        fontSize: theme?.label?.fontSize || 16,
-        fontWeight: theme?.label?.fontWeight as any || '500',
-        marginBottom: theme?.label?.marginBottom || 8,
-        color: theme?.colors?.text || '#333',
-      },
-      input: {
-        borderWidth: theme?.input?.borderWidth || 1,
-        borderColor: error ? (theme?.colors?.error || '#e74c3c') : (theme?.colors?.border || '#ddd'),
-        borderRadius: theme?.input?.borderRadius || 8,
-        padding: theme?.input?.padding || 12,
-        fontSize: theme?.input?.fontSize || 16,
-        backgroundColor: disabled 
-          ? (theme?.colors?.disabled || '#f0f0f0')
-          : (theme?.colors?.background || '#fff'),
-      },
-      errorText: {
-        color: theme?.colors?.error || '#e74c3c',
-        fontSize: theme?.error?.fontSize || 14,
-        marginTop: 4,
-      },
-    };
-  };
-
-  const themedStyles = getThemedStyles();
+  const themedStyles = createStyles((theme) => ({
+    fieldContainer: {
+      marginBottom: getComponent('container.marginBottom', 16),
+    },
+    label: {
+      fontSize: getComponent('label.fontSize', 16),
+      fontWeight: getComponent('label.fontWeight', '500') as any,
+      marginBottom: getComponent('label.marginBottom', 8),
+      color: getComponent('label.color') || getColor('text', '#333'),
+    },
+    input: {
+      borderWidth: getComponent('input.borderWidth', 1),
+      borderColor: error ? getColor('error', '#e74c3c') : getColor('border', '#ddd'),
+      borderRadius: getComponent('input.borderRadius', 8),
+      padding: getComponent('input.padding', 12),
+      fontSize: getComponent('input.fontSize', 16),
+      minHeight: getComponent('input.minHeight', 44),
+      backgroundColor: disabled 
+        ? getColor('disabled', '#f0f0f0')
+        : getColor('background', '#fff'),
+    },
+    errorText: {
+      color: getColor('error', '#e74c3c'),
+      fontSize: getComponent('error.fontSize', 14),
+      marginTop: getComponent('error.marginTop', 4),
+    },
+  }));
 
   const renderField = () => {
     switch (type) {
@@ -186,12 +183,12 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       {label && (
         <Text style={themedStyles.label}>
           {label}
-          {required && <Text style={styles.required}> *</Text>}
+          {required && <Text style={[styles.required, { color: getColor('error') }]}> *</Text>}
         </Text>
       )}
       {renderField()}
       {component.description ? (
-        <Text style={styles.description}>{component.description}</Text>
+        <Text style={[styles.description, { color: getColor('textSecondary') }]}>{component.description}</Text>
       ) : null}
       {error && <Text style={themedStyles.errorText}>{error}</Text>}
     </View>

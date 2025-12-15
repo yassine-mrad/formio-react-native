@@ -115,8 +115,34 @@ export const FormioForm: React.FC<FormProps> = ({
   };
   
   const theme = context?.theme;
-  const [formData, setFormData] = useState<FormData>({});
+  const [formData, setFormData] = useState<FormData>(initialData);
   const [errors, setErrors] = useState<ValidationError[]>([]);
+
+  // Handle wizard forms at the top level
+  if (form.display === 'wizard') {
+    return (
+      <ScrollView style={styles.form}>
+        {form.title && <Text style={styles.title}>{form.title}</Text>}
+        <Wizard
+          form={form}
+           // @ts-ignore
+          component={{ type: 'wizard', key: 'wizard', pages: form.components }}
+          data={formData}
+          setData={setFormData}
+          errors={errors}
+          onValidation={setErrors}
+          onFinish={() => {
+            const validationErrors = validateForm(form.components, formData);
+            if (validationErrors.length === 0) {
+              onSubmit?.(formData);
+            } else {
+              setErrors(validationErrors);
+            }
+          }}
+        />
+      </ScrollView>
+    );
+  }
 
   // Initialize defaults and calculations on mount/form change
   useEffect(() => {
@@ -190,14 +216,14 @@ export const FormioForm: React.FC<FormProps> = ({
       );
     }
 
-    // Wizard container
-    if (component.type === 'wizard') {
+    // Wizard container - check for wizard display or type
+    if (component.type === 'wizard' || form.display === 'wizard') {
+      const wizardPages = (component as any).pages || form.components || [];
       return (
         <Wizard
-          key={component.key}
+          key={component.key || 'wizard'}
           form={form}
-          // @ts-ignore allow pages inferred from components
-          component={{ ...component, pages: (component as any).pages || (component.components as any) }}
+          component={{ ...component, pages: wizardPages, type: 'wizard' }}
           data={formData}
           setData={(d: any) => setFormData(d)}
           errors={errors}
@@ -223,8 +249,8 @@ export const FormioForm: React.FC<FormProps> = ({
       );
     }
 
-    // Containers
-    if (component.components && component.components.length) {
+    // Containers (skip wizard type)
+    if (component.components && component.components.length && component.type !== 'wizard') {
       const children = component.components.map(renderComponent).filter(Boolean);
       if (children.length === 0) return null;
       return (
@@ -298,8 +324,7 @@ export const FormioForm: React.FC<FormProps> = ({
           />
         );
       case 'select': {
-        const ds = (component as any).data?.dataSrc;
-        if (ds === 'url' || ds === 'resource') {
+
           return (
             <ResourceSelect
               key={component.key}
@@ -312,8 +337,6 @@ export const FormioForm: React.FC<FormProps> = ({
               readOnly={options?.readOnly}
             />
           );
-        }
-        break;
       }
       case 'PlatformFileInput':
         return (
@@ -338,7 +361,7 @@ export const FormioForm: React.FC<FormProps> = ({
         value={formData[component.key]}
         onChange={handleFieldChange}
         error={getFieldError(component.key)}
-        theme={theme}
+
       />
     );
   };
@@ -346,7 +369,11 @@ export const FormioForm: React.FC<FormProps> = ({
   return (
     <ScrollView style={styles.form}>
       {form.title && <Text style={styles.title}>{form.title}</Text>}
-      {form.components.map((c) => renderComponent(c))}
+      {form.components.map((c, index) => (
+        <React.Fragment key={c.key || index}>
+          {renderComponent(c)}
+        </React.Fragment>
+      ))}
     </ScrollView>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, TextInput, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import type { FormioComponent } from '../types';
 
 export interface ResourceSelectComponent extends FormioComponent {
@@ -146,55 +146,72 @@ export const ResourceSelect: React.FC<Props> = ({
       </TouchableOpacity>
 
       {showList && (
-        <View style={styles.dropdown}>
-          {useSearch && (
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search..."
-              value={search}
-              onChangeText={setSearch}
-              autoFocus
-              editable={!disabled && !readOnly}
-            />
-          )}
-          {loading ? (
-            <ActivityIndicator style={{ margin: 12 }} />
-          ) : (
-            <FlatList
-              data={filteredItems}
-              keyExtractor={(item: any, i) =>
-                String(`${item.value}-${item.label}-${i}`)
-              }
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.item,
-                    item.value === value && styles.selectedItem
-                  ]}
-                  onPress={() => {
-                    onChange(item.value);
-                    setShowList(false);
-                    setSearch('');
-                  }}
-                >
-                  <Text
+        // Outer View and ScrollView for fixed dropdown and proper scroll on FlatList
+        <View style={styles.dropdownWrapper}>
+          <View style={styles.dropdown}>
+            {useSearch && (
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search..."
+                value={search}
+                onChangeText={setSearch}
+                autoFocus
+                editable={!disabled && !readOnly}
+              />
+            )}
+            {loading ? (
+              <ActivityIndicator style={{ margin: 12 }} />
+            ) : (
+              <FlatList
+                data={filteredItems}
+                keyExtractor={(item: any) => {
+                  // Make key as unique as possible, fallback to stable hash of stringified label+value
+                  const v = typeof item.value === 'object' ? JSON.stringify(item.value) : String(item.value);
+                  const l = String(item.label ?? '');
+                  return `${v}-${l}`;
+                }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    key={
+                      (() => {
+                        // Set the same unique key here for children as in keyExtractor, just in case warn
+                        const v = typeof item.value === 'object' ? JSON.stringify(item.value) : String(item.value);
+                        const l = String(item.label ?? '');
+                        return `${v}-${l}`;
+                      })()
+                    }
                     style={[
-                      styles.itemText,
-                      item.value === value && styles.selectedText
+                      styles.item,
+                      item.value === value && styles.selectedItem
                     ]}
+                    onPress={() => {
+                      onChange(item.value);
+                      setShowList(false);
+                      setSearch('');
+                    }}
                   >
-                    {item.label}
+                    <Text
+                      style={[
+                        styles.itemText,
+                        item.value === value && styles.selectedText
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <Text style={styles.emptyText}>
+                    {loading ? 'Loading...' : 'No options available'}
                   </Text>
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>
-                  {loading ? 'Loading...' : 'No options available'}
-                </Text>
-              }
-              keyboardShouldPersistTaps="handled"
-            />
-          )}
+                }
+                keyboardShouldPersistTaps="handled"
+                style={styles.flatList}
+                contentContainerStyle={{ flexGrow: 1 }}
+                nestedScrollEnabled={true}
+              />
+            )}
+          </View>
         </View>
       )}
       {error && <Text style={styles.error}>{error}</Text>}
@@ -221,13 +238,24 @@ const styles = StyleSheet.create({
   selectorText: { fontSize: 16, color: '#333', flex: 1 },
   placeholder: { color: '#999' },
   arrow: { fontSize: 12, color: '#666' },
+  dropdownWrapper: {
+    // This View ensures dropdown overlays and doesn't expand the parent
+    position: 'relative',
+    zIndex: 1000
+  },
   dropdown: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
     backgroundColor: '#fff',
     maxHeight: 200,
-    marginTop: 4
+    minHeight: 10,
+    marginTop: 4,
+    // To ensure dropdown allows scrolling inside
+    overflow: 'hidden'
+  },
+  flatList: {
+    flexGrow: 1,
   },
   searchInput: {
     borderBottomWidth: 1,

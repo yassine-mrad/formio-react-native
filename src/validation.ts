@@ -8,7 +8,7 @@ const safeEval = (code: string, ctx: Record<string, any>): boolean | string | un
     // eslint-disable-next-line no-new-func
     const fn = new Function(
       'data', 'row', 'value', 'input', 'util', 'valid',
-      `return (function(){\n${code}\nreturn typeof valid !== 'undefined' ? valid : undefined;\n})();`
+      `return (function(){\n${code}\nreturn typeof valid !== 'undefined' ? valid : true;\n})();`
     );
     return fn(
       ctx.data,
@@ -20,7 +20,7 @@ const safeEval = (code: string, ctx: Record<string, any>): boolean | string | un
     );
   } catch (e) {
     // Default to pass on error; optionally log in dev
-    return undefined;
+    return true;
   }
 };
 
@@ -67,6 +67,7 @@ export const validateField = (component: FormioComponent, value: any, fullData: 
     } else if (typeof res === 'string' && res.length > 0) {
       errors.push({ field: key, message: res });
     }
+    // If res is true or undefined, validation passes - no error added
   }
 
   return errors;
