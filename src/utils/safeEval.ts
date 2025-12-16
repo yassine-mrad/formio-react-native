@@ -87,7 +87,7 @@ export function safeEval(
       'util',
       'show',
       'valid',
-      `return (function(){\n${code}\nreturn typeof show !== 'undefined' ? show : (typeof valid !== 'undefined' ? valid : undefined);\n})();`
+      `return (function(){\n${code}\nreturn typeof value !== 'undefined' ? value : (typeof show !== 'undefined' ? show : (typeof valid !== 'undefined' ? valid : undefined));\n})();`
     );
 
     const result = fn(
@@ -164,3 +164,4 @@ export function safeEvalValue(
 ): any {
   return safeEval(code, ctx, options);
 }
+
