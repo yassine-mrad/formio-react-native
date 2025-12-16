@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useI18n } from '../i18n/I18nContext';
 
 interface CheckboxFieldProps {
   label: string;
@@ -16,6 +17,7 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
   required,
   error
 }) => {
+  const { translate, isRTL } = useI18n();
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -25,12 +27,12 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
         <View style={[styles.checkbox, value && styles.checkboxChecked]}>
           {value && <Text style={styles.checkmark}>✓</Text>}
         </View>
-        <Text style={styles.label}>
-          {label}
+        <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
+          {translate(label, label)}
           {required && <Text style={styles.required}> *</Text>}
         </Text>
       </TouchableOpacity>
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && <Text style={[styles.errorText, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(error, error)}</Text>}
     </View>
   );
 };

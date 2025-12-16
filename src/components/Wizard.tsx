@@ -4,6 +4,7 @@ import type { FormioComponent, FormioFormSchema } from '../types';
 import { FormioField } from './FormioField';
 import { validateForm } from '../validation';
 import { useTheme } from '../hooks/useTheme';
+import { useI18n } from '../i18n/I18nContext';
 
 const safeEval = (code: string, ctx: Record<string, any>) => {
   try {
@@ -82,6 +83,7 @@ interface Props {
 export const Wizard: React.FC<Props> = ({ form, component, data, setData, errors, onValidation, onNext, onPrev, onFinish }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const { createStyles, getColor, getComponent } = useTheme();
+  const { translate, isRTL } = useI18n();
 
   const pages = component.pages || [];
   const currentPageData = pages[currentPage];
@@ -189,7 +191,7 @@ export const Wizard: React.FC<Props> = ({ form, component, data, setData, errors
       </View>
       
       {currentPageData.title && (
-        <Text style={themedStyles.pageTitle}>{currentPageData.title}</Text>
+        <Text style={[themedStyles.pageTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(currentPageData.title, currentPageData.title)}</Text>
       )}
       
       <View style={themedStyles.pageContent}>
@@ -213,12 +215,12 @@ export const Wizard: React.FC<Props> = ({ form, component, data, setData, errors
           style={[themedStyles.navBtn, themedStyles.prevBtn, currentPage === 0 && themedStyles.disabled]} 
           disabled={currentPage === 0}
         >
-          <Text style={themedStyles.navText}>Previous</Text>
+          <Text style={themedStyles.navText}>{translate('Previous', 'Previous')}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity onPress={nextPage} style={[themedStyles.navBtn, themedStyles.nextBtn]}>
           <Text style={themedStyles.navText}>
-            {currentPage < pages.length - 1 ? 'Next' : 'Finish'}
+            {currentPage < pages.length - 1 ? translate('Next', 'Next') : translate('Finish', 'Finish')}
           </Text>
         </TouchableOpacity>
       </View>

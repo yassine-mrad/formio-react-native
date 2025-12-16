@@ -10,5 +10,7 @@ export { Wizard } from './components/Wizard';
 export { validateForm, validateField } from './validation';
 export { FormioProvider, useFormioContext } from './context/FormioContext';
 export { useTheme } from './hooks/useTheme';
+export { useI18n } from './i18n/I18nContext';
 export type { ComponentRenderer, ComponentRenderProps, ComponentOverrides, FormioTheme } from './context/FormioContext';
+export type { I18nConfig, I18nContextValue } from './i18n/types';
 export * from './types';

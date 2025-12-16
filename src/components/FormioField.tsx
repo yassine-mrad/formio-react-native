@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, Switch } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Switch, I18nManager } from 'react-native';
 import { CheckboxField } from './CheckboxField';
 import { FormioComponent } from '../types';
 import { useTheme } from '../hooks/useTheme';
+import { useI18n } from '../i18n/I18nContext';
 
 // Optional: If consumer installs @react-native-picker/picker we can lazy import
 let Picker: any = null;
@@ -31,6 +32,11 @@ const getOptions = (component: FormioComponent): Array<{ label: string; value: a
 export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onChange, error }) => {
   const { type, key, label, placeholder, required, disabled } = component;
   const { createStyles, getColor, getComponent } = useTheme();
+  const { translate, isRTL } = useI18n();
+  
+  const translatedLabel = translate(label || '', label);
+  const translatedPlaceholder = translate(placeholder || '', placeholder);
+  const translatedError = translate(error || '', error);
 
   const themedStyles = createStyles((theme) => ({
     fieldContainer: {
@@ -41,6 +47,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       fontWeight: getComponent('label.fontWeight', '500') as any,
       marginBottom: getComponent('label.marginBottom', 8),
       color: getComponent('label.color') || getColor('text', '#333'),
+      textAlign: isRTL ? 'right' : 'left',
     },
     input: {
       borderWidth: getComponent('input.borderWidth', 1),
@@ -52,6 +59,8 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       backgroundColor: disabled 
         ? getColor('disabled', '#f0f0f0')
         : getColor('background', '#fff'),
+      textAlign: isRTL ? 'right' : 'left',
+      writingDirection: isRTL ? 'rtl' : 'ltr',
     },
     errorText: {
       color: getColor('error', '#e74c3c'),
@@ -70,7 +79,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
             style={[themedStyles.input, disabled && styles.disabled]}
             value={value ?? ''}
             onChangeText={(text) => onChange(key, text)}
-            placeholder={placeholder}
+            placeholder={translatedPlaceholder}
             editable={!disabled}
             secureTextEntry={type === 'password'}
             keyboardType={type === 'email' ? 'email-address' : 'default'}
@@ -86,7 +95,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
               const parsed = parseFloat(text);
               onChange(key, isNaN(parsed) ? undefined : parsed);
             }}
-            placeholder={placeholder}
+            placeholder={translatedPlaceholder}
             editable={!disabled}
             keyboardType="numeric"
           />
@@ -98,7 +107,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
             style={[themedStyles.input, styles.textarea, disabled && styles.disabled]}
             value={value ?? ''}
             onChangeText={(text) => onChange(key, text)}
-            placeholder={placeholder}
+            placeholder={translatedPlaceholder}
             editable={!disabled}
             multiline
             numberOfLines={4}
@@ -106,7 +115,10 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
         );
 
       case 'select': {
-        const opts = getOptions(component);
+        const opts = getOptions(component).map(opt => ({
+          ...opt,
+          label: translate(opt.label, opt.label)
+        }));
         if (!Picker) {
           return (
             <Text style={styles.selectPlaceholder}>
@@ -131,7 +143,10 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       }
 
       case 'radio': {
-        const opts = getOptions(component);
+        const opts = getOptions(component).map(opt => ({
+          ...opt,
+          label: translate(opt.label, opt.label)
+        }));
         return (
           <View style={styles.radioGroup}>
             {opts.map((o) => (
@@ -146,11 +161,11 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       case 'checkbox':
         return (
           <CheckboxField
-            label={label || ''}
+            label={translatedLabel || ''}
             value={!!value}
             onChange={(checked) => onChange(key, checked)}
             required={required}
-            error={error}
+            error={translatedError}
           />
         );
 
@@ -162,7 +177,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
               onValueChange={(v) => onChange(key, v)}
               disabled={disabled}
             />
-            <Text style={styles.switchLabel}>{label}</Text>
+            <Text style={styles.switchLabel}>{translatedLabel}</Text>
           </View>
         );
 
@@ -180,17 +195,19 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
 
   return (
     <View style={themedStyles.fieldContainer}>
-      {label && (
+      {translatedLabel && (
         <Text style={themedStyles.label}>
-          {label}
+          {translatedLabel}
           {required && <Text style={[styles.required, { color: getColor('error') }]}> *</Text>}
         </Text>
       )}
       {renderField()}
       {component.description ? (
-        <Text style={[styles.description, { color: getColor('textSecondary') }]}>{component.description}</Text>
+        <Text style={[styles.description, { color: getColor('textSecondary'), textAlign: isRTL ? 'right' : 'left' }]}>
+          {translate(component.description, component.description)}
+        </Text>
       ) : null}
-      {error && <Text style={themedStyles.errorText}>{error}</Text>}
+      {translatedError && <Text style={themedStyles.errorText}>{translatedError}</Text>}
     </View>
   );
 };

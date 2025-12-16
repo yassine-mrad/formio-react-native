@@ -1,5 +1,7 @@
 import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
 import { FormioComponent } from '../types';
+import { I18nConfig } from '../i18n/types';
+import { I18nProvider } from '../i18n/I18nContext';
 
 export type ComponentRenderer = (
   component: FormioComponent,
@@ -179,6 +181,7 @@ interface FormioProviderProps {
   children: ReactNode;
   components?: ComponentOverrides;
   theme?: FormioTheme;
+  i18n?: I18nConfig;
 }
 
 const defaultTheme: FormioTheme = {
@@ -297,7 +300,8 @@ const mergeTheme = (base: FormioTheme, override?: FormioTheme): FormioTheme => {
 export const FormioProvider: React.FC<FormioProviderProps> = ({
   children,
   components: initialComponents,
-  theme: userTheme
+  theme: userTheme,
+  i18n
 }) => {
   const [componentOverrides, setComponentOverrides] = 
     useState<ComponentOverrides>(initialComponents || {});
@@ -328,7 +332,9 @@ export const FormioProvider: React.FC<FormioProviderProps> = ({
 
   return (
     <FormioContext.Provider value={value}>
-      {children}
+      <I18nProvider config={i18n}>
+        {children}
+      </I18nProvider>
     </FormioContext.Provider>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, I18nManager } from 'react-native';
+import { useI18n } from '../i18n/I18nContext';
 import { FormioField } from './FormioField';
 import { DatePicker } from './DatePicker';
 import { FileUpload } from './FileUpload';
@@ -107,6 +108,7 @@ export const FormioForm: React.FC<FormProps> = ({
   onValidation,
 }) => {
   const context = useFormioContext();
+  const { translate, isRTL } = useI18n();
   
   // Merge overrides: prop components > context components > built-in
   const componentOverrides = {
@@ -210,7 +212,7 @@ export const FormioForm: React.FC<FormProps> = ({
           onPress={handleSubmit}
         >
           <Text style={styles.submitButtonText}>
-            {component.label || 'Submit'}
+            {translate(component.label || 'Submit', component.label || 'Submit')}
           </Text>
         </TouchableOpacity>
       );
@@ -237,7 +239,7 @@ export const FormioForm: React.FC<FormProps> = ({
       const cols = (component as any).columns as Array<{ components: FormioComponent[] }>;
       return (
         <View key={component.key} style={styles.columnsContainer}>
-          {component.label ? <Text style={styles.containerLabel}>{component.label}</Text> : null}
+          {component.label ? <Text style={[styles.containerLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(component.label, component.label)}</Text> : null}
           <View style={styles.columnsRow}>
             {cols.map((col, i) => (
               <View key={`${component.key}-col-${i}`} style={styles.column}>
@@ -256,7 +258,7 @@ export const FormioForm: React.FC<FormProps> = ({
       return (
         <View key={component.key} style={styles.container}>
           {component.label && (
-            <Text style={styles.containerLabel}>{component.label}</Text>
+            <Text style={[styles.containerLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(component.label, component.label)}</Text>
           )}
           {children}
         </View>
@@ -367,8 +369,8 @@ export const FormioForm: React.FC<FormProps> = ({
   };
 
   return (
-    <ScrollView style={styles.form}>
-      {form.title && <Text style={styles.title}>{form.title}</Text>}
+    <ScrollView style={[styles.form, { direction: isRTL ? 'rtl' : 'ltr' }]}>
+      {form.title && <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(form.title, form.title)}</Text>}
       {form.components.map((c, index) => (
         <React.Fragment key={c.key || index}>
           {renderComponent(c)}

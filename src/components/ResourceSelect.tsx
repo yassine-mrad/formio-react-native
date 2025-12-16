@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, TextInput, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import type { FormioComponent } from '../types';
+import { useI18n } from '../i18n/I18nContext';
 
 export interface ResourceSelectComponent extends FormioComponent {
   type: 'select';
@@ -44,6 +45,7 @@ export const ResourceSelect: React.FC<Props> = ({
   const [search, setSearch] = useState('');
   const [showList, setShowList] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { translate, isRTL } = useI18n();
 
   const getOptions = () => {
     const data = component.data;
@@ -73,17 +75,19 @@ export const ResourceSelect: React.FC<Props> = ({
           const dataArray = Array.isArray(res)
             ? res
             : res.data || res.items || [];
-          const mapped = dataArray.map((item: any) => ({
-            label:
-              item[labelProp] ||
+          const mapped = dataArray.map((item: any) => {
+            const originalLabel = item[labelProp] ||
               item.name ||
               item.label ||
               item.title ||
               item._id ||
               item.id ||
-              String(item),
-            value: item[valueProp] || item._id || item.id || item.value || item
-          }));
+              String(item);
+            return {
+              label: translate(originalLabel, originalLabel),
+              value: item[valueProp] || item._id || item.id || item.value || item
+            };
+          });
           setItems(mapped);
         } catch (err) {
           setItems([]);
@@ -113,7 +117,7 @@ export const ResourceSelect: React.FC<Props> = ({
   if (disabled || readOnly) {
     return (
       <View style={styles.container}>
-        <Text style={styles.label}>{component.label}</Text>
+        <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(component.label || '', component.label)}</Text>
         <View style={[styles.selector, styles.disabled]}>
           <Text style={styles.selectorText}>
             {selectedItem?.label || component.placeholder || 'Select...'}
@@ -128,8 +132,8 @@ export const ResourceSelect: React.FC<Props> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>
-        {component.label}
+      <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
+        {translate(component.label || '', component.label)}
         {component.required && <Text style={styles.required}> *</Text>}
       </Text>
       <TouchableOpacity
@@ -137,10 +141,10 @@ export const ResourceSelect: React.FC<Props> = ({
         onPress={() => setShowList(!showList)}
         disabled={disabled || readOnly}
       >
-        <Text style={[styles.selectorText, !selectedItem && styles.placeholder]}>
+        <Text style={[styles.selectorText, !selectedItem && styles.placeholder, { textAlign: isRTL ? 'right' : 'left' }]}>
           {loading
-            ? 'Loading...'
-            : selectedItem?.label || component.placeholder || 'Select...'}
+            ? translate('Loading...', 'Loading...')
+            : selectedItem?.label || translate(component.placeholder || 'Select...', component.placeholder || 'Select...')}
         </Text>
         <Text style={styles.arrow}>{showList ? '▲' : '▼'}</Text>
       </TouchableOpacity>
@@ -151,8 +155,8 @@ export const ResourceSelect: React.FC<Props> = ({
           <View style={styles.dropdown}>
             {useSearch && (
               <TextInput
-                style={styles.searchInput}
-                placeholder="Search..."
+                style={[styles.searchInput, { textAlign: isRTL ? 'right' : 'left' }]}
+                placeholder={translate('Search...', 'Search...')}
                 value={search}
                 onChangeText={setSearch}
                 autoFocus
@@ -201,8 +205,8 @@ export const ResourceSelect: React.FC<Props> = ({
                   </TouchableOpacity>
                 )}
                 ListEmptyComponent={
-                  <Text style={styles.emptyText}>
-                    {loading ? 'Loading...' : 'No options available'}
+                  <Text style={[styles.emptyText, { textAlign: isRTL ? 'right' : 'left' }]}>
+                    {loading ? translate('Loading...', 'Loading...') : translate('No options available', 'No options available')}
                   </Text>
                 }
                 keyboardShouldPersistTaps="handled"
@@ -214,7 +218,7 @@ export const ResourceSelect: React.FC<Props> = ({
           </View>
         </View>
       )}
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <Text style={[styles.error, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(error, error)}</Text>}
     </View>
   );
 };
