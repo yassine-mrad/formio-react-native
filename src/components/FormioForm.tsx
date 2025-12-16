@@ -221,9 +221,10 @@ export const FormioForm: React.FC<FormProps> = ({
     // Columns container
     if (component.type === 'columns' && Array.isArray((component as any).columns)) {
       const cols = (component as any).columns as Array<{ components: FormioComponent[] }>;
+      const shouldShowLabel = component.label && !component.hideLabel;
       return (
         <View key={component.key} style={styles.columnsContainer}>
-          {component.label ? <Text style={[styles.containerLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(component.label, component.label)}</Text> : null}
+          {shouldShowLabel ? <Text style={[styles.containerLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(component.label, component.label)}</Text> : null}
           <View style={styles.columnsRow}>
             {cols.map((col, i) => (
               <View key={`${component.key}-col-${i}`} style={styles.column}>
@@ -239,8 +240,12 @@ export const FormioForm: React.FC<FormProps> = ({
     if (component.components && component.components.length && component.type !== 'wizard') {
       const children = component.components.map(renderComponent).filter(Boolean);
       if (children.length === 0) return null;
+      // Panels use 'title' attribute, other containers use 'label'
+      const displayText = (component as any).title || component.label;
+      const shouldShowLabel = displayText && !component.hideLabel;
       return (
         <View key={component.key} style={styles.container}>
+          {shouldShowLabel ? <Text style={[styles.containerLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(displayText, displayText)}</Text> : null}
           {children}
         </View>
       );
