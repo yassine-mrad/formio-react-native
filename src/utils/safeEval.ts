@@ -78,6 +78,7 @@ export function safeEval(
     }
 
     // Support both explicit returns and imperative assignments
+    // Create a wrapper that tracks which variables were explicitly set
     // eslint-disable-next-line no-new-func
     const fn = new Function(
       'data',
@@ -87,7 +88,26 @@ export function safeEval(
       'util',
       'show',
       'valid',
-      `return (function(){\n${code}\nreturn typeof value !== 'undefined' ? value : (typeof show !== 'undefined' ? show : (typeof valid !== 'undefined' ? valid : undefined));\n})();`
+      `
+      var _initialValid = valid;
+      var _initialShow = show;
+      var _initialValue = value;
+      ${code}
+      // Check if valid was explicitly set (for validation contexts)
+      if (typeof valid !== 'undefined' && valid !== _initialValid) {
+        return valid;
+      }
+      // Check if show was explicitly set (for conditional contexts)
+      if (typeof show !== 'undefined' && show !== _initialShow) {
+        return show;
+      }
+      // Check if value was modified (for calculated value contexts)
+      if (typeof value !== 'undefined' && value !== _initialValue) {
+        return value;
+      }
+      // Return undefined if nothing was set
+      return undefined;
+      `
     );
 
     const result = fn(
