@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import type { FormioComponent } from '../types';
+import { useI18n } from '../i18n/I18nContext';
 
 export interface FileComponent extends FormioComponent {
   type: 'file';
@@ -19,16 +20,63 @@ interface Props {
   readOnly?: boolean;
   error?: string;
   onChange: (value: Array<{ name: string; url?: string; base64?: string }>) => void;
+  onPickFile?: () => Promise<Array<{ name: string; url?: string; base64?: string }>>;
 }
 
-// Placeholder: Real implementation should integrate a file picker (e.g. react-native-document-picker) and storage handling.
-export const FileUpload: React.FC<Props> = ({ component, value = [], disabled, readOnly, error, onChange }) => {
+/**
+ * FileUpload component
+ * 
+ * Provides file upload functionality. For production use, integrate:
+ * - react-native-document-picker (for file selection)
+ * - react-native-image-picker (for image selection)
+ * - AWS SDK or similar for S3 uploads
+ * 
+ * This implementation provides a basic UI. The actual file picking logic
+ * should be provided via the onPickFile callback.
+ * 
+ * @example
+ * ```tsx
+ * import DocumentPicker from 'react-native-document-picker';
+ * 
+ * const handlePickFile = async () => {
+ *   const result = await DocumentPicker.pick({
+ *     type: [DocumentPicker.types.allFiles],
+ *   });
+ *   return [{
+ *     name: result.name,
+ *     url: result.uri,
+ *   }];
+ * };
+ * 
+ * <FileUpload
+ *   component={fileComponent}
+ *   value={files}
+ *   onChange={setFiles}
+ *   onPickFile={handlePickFile}
+ * />
+ * ```
+ */
+export const FileUpload: React.FC<Props> = ({
+  component,
+  value = [],
+  disabled,
+  readOnly,
+  error,
+  onChange,
+  onPickFile,
+}) => {
+  const { translate } = useI18n();
+
   const pickFile = async () => {
-    if (disabled || readOnly) return;
-    // Integrate document picker here
-    // For now, simulate adding a placeholder file
-    const next = [...value, { name: 'example.txt' }];
-    onChange(next);
+    if (disabled || readOnly || !onPickFile) return;
+    try {
+      const newFiles = await onPickFile();
+      const next = component.multiple ? [...value, ...newFiles] : newFiles;
+      onChange(next);
+    } catch (err) {
+      // Handle error silently or log
+      console.warn('File pick error:', err);
+    }
   };
 
   const removeFile = (index: number) => {
@@ -37,27 +85,33 @@ export const FileUpload: React.FC<Props> = ({ component, value = [], disabled, r
   };
 
   return (
-    <View>
-      <View style={styles.filesRow}>
-        {value.map((file, idx) => (
-          <View key={idx} style={styles.fileItem}>
-            {file.url || file.base64 ? (
-              <Image source={{ uri: file.url || file.base64 }} style={styles.thumbnail} />
-            ) : (
-              <View style={styles.thumbnailPlaceholder} />
-            )}
-            <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
-            {!disabled && !readOnly && (
-              <TouchableOpacity onPress={() => removeFile(idx)} style={styles.removeButton}>
-                <Text style={styles.removeText}>Remove</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
-      </View>
+    <View style={styles.container}>
+      {value.length > 0 && (
+        <View style={styles.filesRow}>
+          {value.map((file, idx) => (
+            <View key={idx} style={styles.fileItem}>
+              {file.url || file.base64 ? (
+                <Image source={{ uri: file.url || file.base64 }} style={styles.thumbnail} />
+              ) : (
+                <View style={styles.thumbnailPlaceholder}>
+                  <Text style={styles.fileIcon}>📄</Text>
+                </View>
+              )}
+              <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
+              {!disabled && !readOnly && (
+                <TouchableOpacity onPress={() => removeFile(idx)} style={styles.removeButton}>
+                  <Text style={styles.removeText}>{translate('Remove', 'Remove')}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
       {!disabled && !readOnly && (
         <TouchableOpacity onPress={pickFile} style={styles.addButton}>
-          <Text style={styles.addButtonText}>Add File</Text>
+          <Text style={styles.addButtonText}>
+            {translate(component.multiple ? 'Add Files' : 'Add File', component.multiple ? 'Add Files' : 'Add File')}
+          </Text>
         </TouchableOpacity>
       )}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -66,10 +120,14 @@ export const FileUpload: React.FC<Props> = ({ component, value = [], disabled, r
 };
 
 const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
   filesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+    marginBottom: 12,
   },
   fileItem: {
     width: 100,
@@ -86,6 +144,11 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fileIcon: {
+    fontSize: 32,
   },
   fileName: {
     marginTop: 6,
@@ -100,7 +163,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   addButton: {
-    marginTop: 12,
     padding: 10,
     backgroundColor: '#007bff',
     borderRadius: 8,

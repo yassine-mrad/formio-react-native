@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, Switch, I18nManager } from 'react-native';
-import { CheckboxField } from './CheckboxField';
+import { View, Text, TextInput, StyleSheet, I18nManager } from 'react-native';
 import { FormioComponent } from '../types';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '../i18n/I18nContext';
+import { useFormioContext } from '../context/FormioContext';
+import { createRegistryWithComponents } from '../registry';
+import { DEFAULT_RENDERERS, FallbackRenderer } from '../components/renderers';
 
 // Optional: If consumer installs @react-native-picker/picker we can lazy import
 let Picker: any = null;
@@ -33,6 +35,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
   const { type, key, label, placeholder, required, disabled } = component;
   const { createStyles, getColor, getComponent } = useTheme();
   const { translate, isRTL } = useI18n();
+  const formioContext = useFormioContext();
   
   const translatedLabel = translate(label || '', label);
   const translatedPlaceholder = translate(placeholder || '', placeholder);
@@ -69,121 +72,48 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
     },
   }));
 
-  const renderField = () => {
-    switch (type) {
-      case 'textfield':
-      case 'email':
-      case 'password':
-        return (
-          <TextInput
-            style={[themedStyles.input, disabled && styles.disabled]}
-            value={value ?? ''}
-            onChangeText={(text) => onChange(key, text)}
-            placeholder={translatedPlaceholder}
-            editable={!disabled}
-            secureTextEntry={type === 'password'}
-            keyboardType={type === 'email' ? 'email-address' : 'default'}
-          />
-        );
-
-      case 'number':
-        return (
-          <TextInput
-            style={[themedStyles.input, disabled && styles.disabled]}
-            value={value !== undefined && value !== null ? String(value) : ''}
-            onChangeText={(text) => {
-              const parsed = parseFloat(text);
-              onChange(key, isNaN(parsed) ? undefined : parsed);
-            }}
-            placeholder={translatedPlaceholder}
-            editable={!disabled}
-            keyboardType="numeric"
-          />
-        );
-
-      case 'textarea':
-        return (
-          <TextInput
-            style={[themedStyles.input, styles.textarea, disabled && styles.disabled]}
-            value={value ?? ''}
-            onChangeText={(text) => onChange(key, text)}
-            placeholder={translatedPlaceholder}
-            editable={!disabled}
-            multiline
-            numberOfLines={4}
-          />
-        );
-
-      case 'select': {
-        const opts = getOptions(component).map(opt => ({
-          ...opt,
-          label: translate(opt.label, opt.label)
-        }));
-        if (!Picker) {
-          return (
-            <Text style={styles.selectPlaceholder}>
-              Select requires @react-native-picker/picker. Options: {opts.map(o => o.label).join(', ')}
-            </Text>
-          );
+  // Build a registry combining built-in renderers and any overrides from context
+  const registry = React.useMemo(() => {
+    const reg = createRegistryWithComponents(DEFAULT_RENDERERS as any);
+    const overrides = formioContext?.componentOverrides;
+    if (overrides) {
+      Object.entries(overrides).forEach(([t, override]) => {
+        if (override && typeof override === 'function') {
+          reg.register(t, (props: any) => {
+            return override(props.component, {
+              value: props.value,
+              onChange: props.onChange,
+              error: props.error,
+              disabled: props.disabled,
+              readOnly: props.readOnly,
+              formData: props.formData,
+              validationErrors: props.validationErrors,
+            } as any);
+          });
         }
-        const selected = value ?? (opts.length ? opts[0].value : undefined);
-        return (
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={selected}
-              onValueChange={(v: any) => onChange(key, v)}
-              enabled={!disabled}
-            >
-              {opts.map((o) => (
-                <Picker.Item key={String(o.value)} label={o.label} value={o.value} />
-              ))}
-            </Picker>
-          </View>
-        );
-      }
-
-      case 'radio': {
-        const opts = getOptions(component).map(opt => ({
-          ...opt,
-          label: translate(opt.label, opt.label)
-        }));
-        return (
-          <View style={styles.radioGroup}>
-            {opts.map((o) => (
-              <Text key={String(o.value)} style={styles.radioItem} onPress={() => onChange(key, o.value)}>
-                {value === o.value ? '◉' : '◯'} {o.label}
-              </Text>
-            ))}
-          </View>
-        );
-      }
-
-      case 'checkbox':
-        return (
-          <CheckboxField
-            label={translatedLabel || ''}
-            value={!!value}
-            onChange={(checked) => onChange(key, checked)}
-            required={required}
-            error={translatedError}
-          />
-        );
-
-      case 'switch':
-        return (
-          <View style={styles.switchRow}>
-            <Switch
-              value={!!value}
-              onValueChange={(v) => onChange(key, v)}
-              disabled={disabled}
-            />
-            <Text style={styles.switchLabel}>{translatedLabel}</Text>
-          </View>
-        );
-
-      default:
-        return null;
+      });
     }
+    return reg;
+  }, [formioContext?.componentOverrides]);
+
+  const renderField = () => {
+    // Try to render via the registry first
+    const renderer: any = registry.get(type);
+    if (renderer) {
+      return (
+        <>{renderer({
+          component,
+          value,
+          onChange: (val: any) => onChange(key, val),
+          error: translatedError,
+          disabled,
+          readOnly: !!component.readOnly,
+        } as any)}</>
+      );
+    }
+
+    // Fallback: unknown type
+    return <FallbackRenderer component={component} value={value} onChange={(v:any)=>onChange(key,v)} error={translatedError} disabled={disabled} />;
   };
 
   if (component.input === false) return null;

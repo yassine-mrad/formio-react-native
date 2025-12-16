@@ -1,37 +1,23 @@
 import { FormioComponent, FormData, ValidationError } from './types';
+import { getValidationMessage } from './i18n/messages';
+import { isEmpty, safeEvalValidation } from './utils';
 
-const isEmpty = (val: any) => val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0);
-
-const safeEval = (code: string, ctx: Record<string, any>): boolean | string | undefined => {
-  try {
-    // Support explicit returns and imperative 'valid = ...' assignments
-    // eslint-disable-next-line no-new-func
-    const fn = new Function(
-      'data', 'row', 'value', 'input', 'util', 'valid',
-      `return (function(){\n${code}\nreturn typeof valid !== 'undefined' ? valid : true;\n})();`
-    );
-    return fn(
-      ctx.data,
-      ctx.row ?? ctx.data,
-      ctx.value,
-      ctx.value, // input alias for compatibility
-      ctx.util ?? {},
-      undefined
-    );
-  } catch (e) {
-    // Default to pass on error; optionally log in dev
-    return true;
-  }
-};
-
-export const validateField = (component: FormioComponent, value: any, fullData: Record<string, any> = {}): ValidationError[] => {
+export const validateField = (
+  component: FormioComponent,
+  value: any,
+  fullData: Record<string, any> = {},
+  options?: { translate?: (key: string, fallback?: string) => string }
+): ValidationError[] => {
   const errors: ValidationError[] = [];
   const { key, validate = {}, required, label } = component;
 
   // Required
   if (required || validate.required) {
     if (isEmpty(value)) {
-      errors.push({ field: key, message: `${label || key} is required` });
+      const msg = options?.translate
+        ? options.translate('validation.REQUIRED', `${label || key} is required`)
+        : getValidationMessage('REQUIRED');
+      errors.push({ field: key, message: msg });
       return errors;
     }
   }
@@ -39,31 +25,33 @@ export const validateField = (component: FormioComponent, value: any, fullData: 
   // String validations
   if (!isEmpty(value) && typeof value === 'string') {
     if (validate.minLength !== undefined && value.length < (validate.minLength as number)) {
-      errors.push({ field: key, message: `Minimum length is ${validate.minLength}` });
+      errors.push({ field: key, message: getValidationMessage('MIN_LENGTH', { min: validate.minLength }, options?.translate) });
     }
     if (validate.maxLength !== undefined && value.length > (validate.maxLength as number)) {
-      errors.push({ field: key, message: `Maximum length is ${validate.maxLength}` });
+      errors.push({ field: key, message: getValidationMessage('MAX_LENGTH', { max: validate.maxLength }, options?.translate) });
     }
     if (validate.pattern && !(new RegExp(validate.pattern)).test(value)) {
-      errors.push({ field: key, message: validate.customMessage || 'Invalid format' });
+      const msg = validate.customMessage || (options?.translate ? options.translate('validation.PATTERN', 'Invalid format') : getValidationMessage('PATTERN'));
+      errors.push({ field: key, message: msg });
     }
   }
 
   // Number validations
   if (!isEmpty(value) && typeof value === 'number') {
     if (validate.min !== undefined && value < (validate.min as number)) {
-      errors.push({ field: key, message: `Minimum value is ${validate.min}` });
+      errors.push({ field: key, message: getValidationMessage('MIN_VALUE', { min: validate.min }, options?.translate) });
     }
     if (validate.max !== undefined && value > (validate.max as number)) {
-      errors.push({ field: key, message: `Maximum value is ${validate.max}` });
+      errors.push({ field: key, message: getValidationMessage('MAX_VALUE', { max: validate.max }, options?.translate) });
     }
   }
 
   // Custom validation (supports imperative valid=... and explicit returns)
   if (validate && validate.custom) {
-    const res = safeEval(validate.custom, { value, data: fullData, row: fullData, util: {} });
+    const res = safeEvalValidation(validate.custom, { value, data: fullData, row: fullData, util: {} });
     if (res === false) {
-      errors.push({ field: key, message: validate.customMessage || `${label || key} is invalid` });
+      const msg = validate.customMessage || (options?.translate ? options.translate('validation.CUSTOM_ERROR', `${label || key} is invalid`) : getValidationMessage('CUSTOM_ERROR'));
+      errors.push({ field: key, message: msg });
     } else if (typeof res === 'string' && res.length > 0) {
       errors.push({ field: key, message: res });
     }
@@ -73,13 +61,13 @@ export const validateField = (component: FormioComponent, value: any, fullData: 
   return errors;
 };
 
-export const validateForm = (components: FormioComponent[], data: FormData): ValidationError[] => {
+export const validateForm = (components: FormioComponent[], data: FormData, options?: { translate?: (key: string, fallback?: string) => string }): ValidationError[] => {
   const errors: ValidationError[] = [];
 
   const traverse = (component: FormioComponent) => {
     // Skip hidden or non-inputs
     if (component.input !== false && !component.hidden) {
-      const fieldErrors = validateField(component, (data as any)[component.key], data as any);
+      const fieldErrors = validateField(component, (data as any)[component.key], data as any, options);
       errors.push(...fieldErrors);
     }
     // Standard containers

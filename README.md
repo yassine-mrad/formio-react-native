@@ -171,22 +171,38 @@ const MyComponent = () => {
 
 ## Supported Field Types
 
-- `textfield` - Text input
+### Input Components
+- `textfield` / `text` - Text input
 - `email` - Email input with validation
-- `password` - Password input (masked)
-- `number` - Numeric input
+- `password` - Password input (masked) with show/hide toggle
+- `number` - Numeric input with min/max constraints
 - `textarea` - Multi-line text input
-- `select` - Dropdown picker
-- `checkbox` - Checkbox input
+- `url` - URL input with URL keyboard
+- `phoneNumber` - Phone number input with phone keyboard
+
+### Selection Components
+- `select` - Dropdown picker with search
+- `checkbox` - Single checkbox/toggle
 - `radio` - Radio button group
-- `button` - Submit button
-- `date` - Date picker
-- `file` - File upload
-- `datagrid` - Data grid
-- `editgrid` - Editable grid
-- `wizard` - Multi-step wizard
+- `selectboxes` - Multi-select checkboxes
+
+### Date/Time Components
+- `date` - Date picker (text-based, ready for native integration)
+- `datetime` - Date and time picker
+- `time` - Time picker
+
+### File Components
+- `file` - File upload with callback support
+
+### Layout Components
 - `panel` - Container panel
 - `columns` - Column layout
+- `datagrid` - Data grid with add/remove rows
+- `editgrid` - Editable grid with inline editing
+
+### Advanced Components
+- `wizard` - Multi-step wizard form
+- `button` - Submit button
 
 ## API
 
@@ -230,3 +246,139 @@ interface ComponentRenderProps {
 3. **Built-in components** - Lowest priority (fallback)
 
 This allows you to set global defaults while still overriding specific forms when needed.
+
+## Internationalization (i18n)
+
+The library includes built-in support for multiple languages with automatic RTL detection.
+
+### Supported Languages
+
+- **English** (en) - Default
+- **Arabic** (ar) - RTL
+- **French** (fr)
+
+### Basic Usage
+
+```tsx
+import { FormioProvider, FormioForm } from '@formio/react-native';
+
+const App = () => {
+  return (
+    <FormioProvider
+      i18n={{
+        language: 'ar', // Set to Arabic
+        translations: {
+          // Use default translations or provide custom ones
+        },
+      }}
+    >
+      <FormioForm form={formSchema} onSubmit={handleSubmit} />
+    </FormioProvider>
+  );
+};
+```
+
+### Custom Translations
+
+```tsx
+const customTranslations = {
+  en: {
+    'validation.REQUIRED': 'This field is mandatory',
+    'Submit': 'Send Form',
+    'First Name': 'Given Name',
+  },
+  ar: {
+    'validation.REQUIRED': 'هذا الحقل إلزامي',
+    'Submit': 'إرسال النموذج',
+    'First Name': 'الاسم الأول',
+  },
+};
+
+<FormioProvider
+  i18n={{
+    language: 'ar',
+    translations: customTranslations,
+  }}
+>
+  <FormioForm form={formSchema} onSubmit={handleSubmit} />
+</FormioProvider>
+```
+
+### Language Switching
+
+```tsx
+import { useI18n } from '@formio/react-native';
+
+const LanguageSwitcher = () => {
+  const { language, setLanguage } = useI18n();
+
+  return (
+    <View>
+      <TouchableOpacity onPress={() => setLanguage('en')}>
+        <Text>English</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => setLanguage('ar')}>
+        <Text>العربية</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => setLanguage('fr')}>
+        <Text>Français</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+```
+
+### RTL Support
+
+RTL (Right-to-Left) is automatically enabled for Arabic and Hebrew. The library handles:
+
+- Text direction
+- Component alignment
+- Icon positioning
+- Margin/padding reversal
+
+```tsx
+import { useI18n } from '@formio/react-native';
+
+const MyComponent = () => {
+  const { isRTL } = useI18n();
+
+  return (
+    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+      {/* Your content */}
+    </View>
+  );
+};
+```
+
+### Translation Keys
+
+#### Validation Messages
+- `validation.REQUIRED` - Field is required
+- `validation.MIN_LENGTH` - Minimum length validation
+- `validation.MAX_LENGTH` - Maximum length validation
+- `validation.PATTERN` - Pattern validation
+- `validation.MIN_VALUE` - Minimum value validation
+- `validation.MAX_VALUE` - Maximum value validation
+- `validation.INVALID_EMAIL` - Email validation
+- `validation.INVALID_URL` - URL validation
+- `validation.INVALID_PHONE` - Phone validation
+- `validation.INVALID_DATE` - Date validation
+- `validation.FILE_TYPE_INVALID` - File type validation
+- `validation.FILE_SIZE_TOO_LARGE` - File size validation
+- `validation.CUSTOM_ERROR` - Custom validation error
+
+#### Common UI Strings
+- `Submit` - Submit button
+- `Previous` - Previous button
+- `Next` - Next button
+- `Finish` - Finish button
+- `Loading...` - Loading indicator
+- `Search...` - Search placeholder
+- `No options available` - Empty options message
+- `Select...` - Select placeholder
+- `No wizard pages found` - Wizard error message
+
+#### Component Labels
+- `First Name`, `Last Name`, `Email`, `Phone`, `Address`, `City`, `State`, `Zip Code`, `Country`
+- `Message`, `Comments`, `Agree`, `Yes`, `No`, `OK`, `Cancel`, `Delete`, `Edit`, `Add`, `Remove`, `Save`, `Close`, `Done`

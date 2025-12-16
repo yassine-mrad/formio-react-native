@@ -102,9 +102,9 @@ export const Wizard: React.FC<Props> = ({ form, component, data, setData, errors
   // Validate current page on data change
   useEffect(() => {
     if (currentPageData?.components) {
-       // @ts-ignore
+      // @ts-ignore
       const allComponents = pages.flatMap(p => p.components || []);
-      const allErrors = validateForm(allComponents, data);
+      const allErrors = validateForm(allComponents, data, { translate });
       onValidation?.(allErrors);
     }
   }, [data, currentPageData, pages, onValidation]);

@@ -2,6 +2,8 @@ import React, { createContext, useContext, ReactNode, useState, useCallback } fr
 import { FormioComponent } from '../types';
 import { I18nConfig } from '../i18n/types';
 import { I18nProvider } from '../i18n/I18nContext';
+import { ComponentRegistry, createRegistryWithComponents } from '../registry';
+import { DEFAULT_RENDERERS } from '../components/renderers';
 
 export type ComponentRenderer = (
   component: FormioComponent,
@@ -168,6 +170,7 @@ export interface FormioContextValue {
   theme?: FormioTheme;
   registerComponent: (type: string, renderer: ComponentRenderer) => void;
   getThemeValue: (path: string, fallback?: any) => any;
+  registry?: ComponentRegistry;
 }
 
 const FormioContext = createContext<FormioContextValue | undefined>(undefined);
@@ -175,6 +178,11 @@ const FormioContext = createContext<FormioContextValue | undefined>(undefined);
 export const useFormioContext = () => {
   const context = useContext(FormioContext);
   return context;
+};
+
+export const useRegistry = (): ComponentRegistry | undefined => {
+  const context = useContext(FormioContext);
+  return context?.registry;
 };
 
 interface FormioProviderProps {
@@ -303,31 +311,58 @@ export const FormioProvider: React.FC<FormioProviderProps> = ({
   theme: userTheme,
   i18n
 }) => {
-  const [componentOverrides, setComponentOverrides] = 
-    useState<ComponentOverrides>(initialComponents || {});
+  const [componentOverrides, setComponentOverrides] = useState<ComponentOverrides>(initialComponents || {});
 
   const theme = mergeTheme(defaultTheme, userTheme);
 
-  const registerComponent = useCallback(
-    (type: string, renderer: ComponentRenderer) => {
-      setComponentOverrides(prev => ({
-        ...prev,
-        [type]: renderer
-      }));
-    },
-    []
-  );
+  // Create registry with default renderers and apply any initial overrides
+  const registry = React.useMemo(() => {
+    const reg = createRegistryWithComponents(DEFAULT_RENDERERS as any);
+    if (initialComponents) {
+      Object.entries(initialComponents).forEach(([t, override]) => {
+        if (override && typeof override === 'function') {
+          reg.register(t, (props: any) => {
+            return override(props.component, {
+              value: props.value,
+              onChange: props.onChange,
+              error: props.error,
+              disabled: props.disabled,
+              readOnly: props.readOnly,
+              formData: props.formData,
+              validationErrors: props.validationErrors,
+            } as any);
+          });
+        }
+      });
+    }
+    return reg;
+  }, []);
 
-  const getThemeValue = useCallback(
-    (path: string, fallback?: any) => getNestedValue(theme, path, fallback),
-    [theme]
-  );
+  const registerComponent = useCallback((type: string, renderer: ComponentRenderer) => {
+    setComponentOverrides(prev => ({ ...prev, [type]: renderer }));
+    if (registry) {
+      registry.register(type, (props: any) => {
+        return renderer(props.component, {
+          value: props.value,
+          onChange: props.onChange,
+          error: props.error,
+          disabled: props.disabled,
+          readOnly: props.readOnly,
+          formData: props.formData,
+          validationErrors: props.validationErrors,
+        } as any);
+      });
+    }
+  }, [registry]);
+
+  const getThemeValue = useCallback((path: string, fallback?: any) => getNestedValue(theme, path, fallback), [theme]);
 
   const value: FormioContextValue = {
     componentOverrides,
     theme,
     registerComponent,
-    getThemeValue
+    getThemeValue,
+    registry,
   };
 
   return (

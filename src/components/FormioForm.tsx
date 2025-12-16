@@ -11,22 +11,7 @@ import { Wizard } from './Wizard';
 import { validateForm } from '../validation';
 import { FormProps, FormData, ValidationError, FormioComponent } from '../types';
 import { useFormioContext, ComponentOverrides } from '../context/FormioContext';
-
-const isEmpty = (val: any) => val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0);
-
-const safeEval = (code: string, ctx: Record<string, any>) => {
-  try {
-    // Support both explicit boolean returns and imperative show assignment
-    // eslint-disable-next-line no-new-func
-    const fn = new Function(
-      'data', 'row', 'value', 'util', 'show',
-      `return (function(){\n${code}\nreturn typeof show !== 'undefined' ? show : undefined;\n})();`
-    );
-    return fn(ctx.data, ctx.row ?? ctx.data, ctx.value, ctx.util ?? {}, undefined);
-  } catch (e) {
-    return undefined;
-  }
-};
+import { safeEvalConditional, safeEvalValue, isEmpty } from '../utils';
 
 const traverseComponents = (components: FormioComponent[], cb: (c: FormioComponent) => void) => {
   const walk = (comp: FormioComponent) => {
@@ -62,9 +47,8 @@ const isHidden = (component: FormioComponent, data: FormData): boolean => {
   if (component.hidden) return true;
   const value = data[component.key];
   if (component.customConditional) {
-    const res = safeEval(component.customConditional, { data, value, row: data, util: {} });
-    if (typeof res === 'boolean') return !res;
-    if (res !== undefined) return !Boolean(res);
+    const res = safeEvalConditional(component.customConditional, { data, value, row: data, util: {} });
+    return !res;
   }
   if (component.conditional && component.conditional.when) {
     const whenVal = data[component.conditional.when];
@@ -87,7 +71,7 @@ const applyCalculations = (components: FormioComponent[], data: FormData): FormD
     for (const c of flat) {
       if (c.calculateValue) {
         const current = next[c.key];
-        const calc = safeEval(c.calculateValue, { data: next, value: current, row: next, util: {} });
+        const calc = safeEvalValue(c.calculateValue, { data: next, value: current, row: next, util: {} });
         if (calc !== undefined && calc !== current) {
           next = { ...next, [c.key]: calc };
           changed = true;
@@ -134,13 +118,13 @@ export const FormioForm: React.FC<FormProps> = ({
           errors={errors}
           onValidation={setErrors}
           onFinish={() => {
-            const validationErrors = validateForm(form.components, formData);
-            if (validationErrors.length === 0) {
-              onSubmit?.(formData);
-            } else {
-              setErrors(validationErrors);
-            }
-          }}
+              const validationErrors = validateForm(form.components, formData, { translate });
+              if (validationErrors.length === 0) {
+                onSubmit?.(formData);
+              } else {
+                setErrors(validationErrors);
+              }
+            }}
         />
       </ScrollView>
     );
@@ -151,7 +135,7 @@ export const FormioForm: React.FC<FormProps> = ({
     let next = initDefaults(form.components, initialData);
     next = applyCalculations(form.components, next);
     setFormData(next);
-    const validationErrors = validateForm(form.components, next);
+    const validationErrors = validateForm(form.components, next, { translate });
     setErrors(validationErrors);
     onValidation?.(validationErrors);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -159,7 +143,7 @@ export const FormioForm: React.FC<FormProps> = ({
 
   // Revalidate when data changes from external source
   useEffect(() => {
-    const validationErrors = validateForm(form.components, formData);
+    const validationErrors = validateForm(form.components, formData, { translate });
     setErrors(validationErrors);
     onValidation?.(validationErrors);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -174,7 +158,7 @@ export const FormioForm: React.FC<FormProps> = ({
   };
 
   const handleSubmit = () => {
-    const validationErrors = validateForm(form.components, formData);
+    const validationErrors = validateForm(form.components, formData, { translate });
     if (validationErrors.length === 0) {
       onSubmit?.(formData);
     } else {
@@ -257,9 +241,6 @@ export const FormioForm: React.FC<FormProps> = ({
       if (children.length === 0) return null;
       return (
         <View key={component.key} style={styles.container}>
-          {component.label && (
-            <Text style={[styles.containerLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(component.label, component.label)}</Text>
-          )}
           {children}
         </View>
       );
@@ -370,7 +351,7 @@ export const FormioForm: React.FC<FormProps> = ({
 
   return (
     <ScrollView style={[styles.form, { direction: isRTL ? 'rtl' : 'ltr' }]}>
-      {form.title && <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>{translate(form.title, form.title)}</Text>}
+
       {form.components.map((c, index) => (
         <React.Fragment key={c.key || index}>
           {renderComponent(c)}
