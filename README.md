@@ -5,7 +5,7 @@ React Native renderer for Form.io forms using native components with theming and
 ## Installation
 
 ```bash
-npm install formio-react-native @react-native-picker/picker
+npm install formio-react-native
 ```
 
 ## Basic Usage
