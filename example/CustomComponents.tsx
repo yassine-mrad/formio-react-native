@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { ComponentRenderer } from '@formio/react-native';
+import { ComponentRenderer } from 'formio-react-native';
 
 // Example custom text field with different styling
 export const CustomTextField: ComponentRenderer = (component, props) => {

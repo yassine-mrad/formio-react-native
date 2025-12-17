@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SafeAreaView, Alert, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
-import { FormioForm, FormioProvider } from '@formio/react-native';
+import { FormioForm, FormioProvider } from 'formio-react-native';
 
 const customTranslations = {
   fr: {

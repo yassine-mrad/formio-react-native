@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView, Alert } from 'react-native';
-import { FormioForm } from '@formio/react-native';
+import { FormioForm } from 'formio-react-native';
 
 const wizardForm = {
   title: 'Multi-Step Wizard',

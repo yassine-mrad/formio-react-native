@@ -1,18 +1,18 @@
-# @formio/react-native
+# formio-react-native
 
 React Native renderer for Form.io forms using native components with theming and customization support.
 
 ## Installation
 
 ```bash
-npm install @formio/react-native @react-native-picker/picker
+npm install formio-react-native @react-native-picker/picker
 ```
 
 ## Basic Usage
 
 ```tsx
 import React from 'react';
-import { FormioForm } from '@formio/react-native';
+import { FormioForm } from 'formio-react-native';
 
 const formSchema = {
   components: [
@@ -60,7 +60,7 @@ export default function App() {
 
 ```tsx
 import React from 'react';
-import { FormioProvider, FormioForm } from '@formio/react-native';
+import { FormioProvider, FormioForm } from 'formio-react-native';
 
 const App = () => {
   return (
@@ -95,7 +95,7 @@ const App = () => {
 
 ```tsx
 import React from 'react';
-import { FormioProvider, ComponentRenderer } from '@formio/react-native';
+import { FormioProvider, ComponentRenderer } from 'formio-react-native';
 import { TextInput, Text, View } from 'react-native';
 
 const CustomTextField: ComponentRenderer = (component, props) => {
@@ -154,7 +154,7 @@ const App = () => {
 ### Dynamic Component Registration
 
 ```tsx
-import { useFormioContext } from '@formio/react-native';
+import { useFormioContext } from 'formio-react-native';
 
 const MyComponent = () => {
   const { registerComponent } = useFormioContext();
@@ -260,7 +260,7 @@ The library includes built-in support for multiple languages with automatic RTL 
 ### Basic Usage
 
 ```tsx
-import { FormioProvider, FormioForm } from '@formio/react-native';
+import { FormioProvider, FormioForm } from 'formio-react-native';
 
 const App = () => {
   return (
@@ -307,7 +307,7 @@ const customTranslations = {
 ### Language Switching
 
 ```tsx
-import { useI18n } from '@formio/react-native';
+import { useI18n } from 'formio-react-native';
 
 const LanguageSwitcher = () => {
   const { language, setLanguage } = useI18n();
@@ -338,7 +338,7 @@ RTL (Right-to-Left) is automatically enabled for Arabic and Hebrew. The library 
 - Margin/padding reversal
 
 ```tsx
-import { useI18n } from '@formio/react-native';
+import { useI18n } from 'formio-react-native';
 
 const MyComponent = () => {
   const { isRTL } = useI18n();

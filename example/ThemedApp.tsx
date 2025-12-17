@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView, Alert } from 'react-native';
-import { FormioForm, FormioProvider } from '@formio/react-native';
+import { FormioForm, FormioProvider } from 'formio-react-native';
 import { CustomTextField, CustomButton } from './CustomComponents';
 
 // Example public API for demo (countries)

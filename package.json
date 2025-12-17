@@ -1,5 +1,5 @@
 {
-  "name": "@formio/react-native",
+  "name": "formio-react-native",
   "version": "1.0.0",
   "description": "React Native renderer for Form.io forms",
   "main": "lib/index.js",

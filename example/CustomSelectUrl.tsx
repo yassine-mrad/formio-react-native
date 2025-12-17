@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, Alert, View, Text, TouchableOpacity, FlatList, TextInput, StyleSheet } from 'react-native';
-import { FormioForm, FormioProvider, ComponentRenderer } from '@formio/react-native';
+import { FormioForm, FormioProvider, ComponentRenderer } from 'formio-react-native';
 
 const CustomSelect: ComponentRenderer = (component, props) => {
   const [items, setItems] = useState([]);
