@@ -1,0 +1,50 @@
+name: Package Size Check
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+
+jobs:
+  size:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build library
+        run: yarn build
+
+      - name: Check package size
+        run: |
+          echo "📦 Package Size Report"
+          echo "======================"
+          du -sh lib/
+          echo ""
+          echo "Breakdown by directory:"
+          du -sh lib/*/
+          echo ""
+          echo "Breakdown by file type:"
+          find lib -type f -name "*.js" -exec du -ch {} + | tail -1 | awk '{print "JavaScript files: " $1}'
+          find lib -type f -name "*.d.ts" -exec du -ch {} + | tail -1 | awk '{print "TypeScript definitions: " $1}'
+          find lib -type f -name "*.map" -exec du -ch {} + | tail -1 | awk '{print "Source maps: " $1}'
+
+      - name: Create package
+        run: npm pack
+
+      - name: Check tarball size
+        run: |
+          echo ""
+          echo "📦 Final Package Size:"
+          ls -lh *.tgz

@@ -2,32 +2,79 @@
   "name": "formio-react-native",
   "version": "1.0.0",
   "description": "React Native renderer for Form.io forms",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/commonjs/index.d.ts",
+  "react-native": "lib/module/index.js",
+  "source": "src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "prepare": "npm run build"
+    "build": "bob build && yarn build:cleanup",
+    "build:cleanup": "node scripts/cleanup.js",
+    "prepare": "bob build",
+    "prepack": "bob build"
   },
   "keywords": [
     "react-native",
     "formio",
     "forms"
   ],
-  "author": "Form.io",
+  "author": "Yassine Mrad",
   "license": "MIT",
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-native": ">=0.60.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.23.0",
+    "@babel/preset-env": "^7.23.0",
+    "@babel/preset-react": "^7.23.0",
+    "@babel/preset-typescript": "^7.23.0",
+    "@babel/plugin-transform-class-properties": "^7.23.0",
+    "@babel/plugin-transform-runtime": "^7.23.0",
     "@types/react": "^18.2.48",
     "@types/react-native": "^0.72.0",
+    "react-native-builder-bob": "^0.40.17",
+    "rimraf": "^5.0.0",
     "typescript": "^5.9.3"
   },
   "resolutions": {
     "@types/react": "^18.2.48"
   },
   "files": [
-    "lib"
-  ]
+    "lib/commonjs",
+    "lib/module",
+    "lib/typescript/commonjs",
+    "!lib/**/*.map",
+    "!lib/typescript/module",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__"
+  ],
+  "sideEffects": false,
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "commonjs",
+        {
+          "esm": false,
+          "configFile": "./babel.config.js"
+        }
+      ],
+      [
+        "module",
+        {
+          "esm": true,
+          "configFile": "./babel.config.js"
+        }
+      ],
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
+  }
 }

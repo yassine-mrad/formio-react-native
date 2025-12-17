@@ -1,20 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "lib": ["es2017", "es2019"],
-    "module": "commonjs",
+    "target": "esnext",
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "node",
     "declaration": true,
-    "outDir": "./lib",
-    "rootDir": "./src",
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
-    "jsx": "react",
+    "jsx": "react-native",
     "types": ["react", "react-native"],
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "lib", "src/utils/performanceUtils.ts", "src/utils/componentUtils.ts"]
+  "exclude": ["node_modules", "lib", "example", "doc", "src/utils/performanceUtils.ts", "src/utils/componentUtils.ts"]
 }

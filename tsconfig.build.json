@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": false,
+    "emitDeclarationOnly": true,
+    "outDir": "lib/typescript",
+    "removeComments": true,
+    "stripInternal": true
+  },
+  "exclude": [
+    "node_modules",
+    "lib",
+    "example",
+    "doc",
+    "**/__tests__",
+    "**/__fixtures__",
+    "**/__mocks__",
+    "src/utils/performanceUtils.ts",
+    "src/utils/componentUtils.ts"
+  ]
+}

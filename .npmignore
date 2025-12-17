@@ -1,0 +1,52 @@
+# Source files (not needed in published package since we ship compiled)
+src/
+
+# Development files
+*.md
+!README.md
+.editorconfig
+.eslintrc*
+.prettierrc*
+tsconfig.json
+babel.config.js
+
+# Build artifacts
+**/*.map
+*.tsbuildinfo
+
+# Tests
+**/__tests__/
+**/__mocks__/
+**/__fixtures__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+doc/
+docs/
+*.md
+!README.md
+
+# Example
+example/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Misc
+.history-memo/
+.qodo/
+.DS_Store
