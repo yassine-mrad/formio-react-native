@@ -1,6 +1,6 @@
 {
   "name": "formio-react-native",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React Native renderer for Form.io forms",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
@@ -76,5 +76,13 @@
         }
       ]
     ]
+  },
+    "repository": {
+    "type": "git",
+    "url": "https://github.com/yassine-mrad/formio-react-native.git"
+  },
+  "homepage": "https://yassine-mrad.github.io/formio-react-native-documentation/",
+  "bugs": {
+    "url": "https://github.com/yassine-mrad/formio-react-native/issues"
   }
 }
