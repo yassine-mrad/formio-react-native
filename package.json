@@ -1,6 +1,6 @@
 {
   "name": "formio-react-native",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "React Native renderer for Form.io forms",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
