@@ -10,6 +10,7 @@ import React from 'react';
 import { TextInput, StyleSheet, View, Text } from 'react-native';
 import { ComponentRenderProps } from '../../registry/ComponentRegistry';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
+import { useI18n } from '../../i18n/I18nContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -59,7 +60,7 @@ export const NumberRenderer: React.FC<ComponentRenderProps> = ({
 }) => {
   const [state, setState] = React.useState<NumberFieldState>({ isFocused: false });
   const { placeholder, min, max,  } = component;
-
+  const {translate} = useI18n();
   const inputStyle = [
     styles.input,
     state.isFocused && styles.inputFocused,
@@ -92,7 +93,7 @@ export const NumberRenderer: React.FC<ComponentRenderProps> = ({
     <View style={styles.container}>
       <TextInput
         style={inputStyle}
-        placeholder={placeholder || 'Enter a number'}
+        placeholder={translate(placeholder) || translate('Enter a number')}
         placeholderTextColor={COLORS.placeholder}
         value={value !== null && value !== undefined ? String(value) : ''}
         onChangeText={handleChange}

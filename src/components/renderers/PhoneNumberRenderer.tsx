@@ -10,6 +10,7 @@ import React from 'react';
 import { TextInput, StyleSheet, View, Text } from 'react-native';
 import { ComponentRenderProps } from '../../registry/ComponentRegistry';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
+import { useI18n } from '../../i18n/I18nContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -59,7 +60,7 @@ export const PhoneNumberRenderer: React.FC<ComponentRenderProps> = ({
 }) => {
   const [state, setState] = React.useState<PhoneNumberFieldState>({ isFocused: false });
   const {  placeholder } = component;
-
+  const {translate} = useI18n();  
   const inputStyle = [
     styles.input,
     state.isFocused && styles.inputFocused,
@@ -71,7 +72,7 @@ export const PhoneNumberRenderer: React.FC<ComponentRenderProps> = ({
     <View style={styles.container}>
       <TextInput
         style={inputStyle}
-        placeholder={placeholder || 'Enter phone number'}
+        placeholder={translate(placeholder) || translate('Enter phone number')  }
         placeholderTextColor={COLORS.placeholder}
         value={String(value || '')}
         onChangeText={onChange}

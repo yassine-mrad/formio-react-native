@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { ComponentRenderProps } from '../../registry/ComponentRegistry';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
+import { useI18n } from '../../i18n/I18nContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -144,10 +145,10 @@ export const SelectRenderer: React.FC<ComponentRenderProps> = ({
     isFocused: false,
     options: parseOptions(component.data?.values || component.values || []),
   });
-
+  const {translate} = useI18n()
   const { label, placeholder } = component;
   const selectedOption = state.options.find(opt => opt.value === value);
-  const displayText = selectedOption?.label || placeholder || 'Select an option';
+  const displayText =  selectedOption?.label || translate(placeholder) || translate('Select an option');
 
   const selectButtonStyle = [
     styles.selectButton,
@@ -179,7 +180,7 @@ export const SelectRenderer: React.FC<ComponentRenderProps> = ({
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={styles.label}>{ translate(label)}</Text>}
       <TouchableOpacity
         style={selectButtonStyle}
         onPress={handleOpenClose}

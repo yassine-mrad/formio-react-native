@@ -10,6 +10,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ComponentRenderProps } from '../../registry/ComponentRegistry';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
+import { useI18n } from '../../i18n/I18nContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -101,10 +102,10 @@ export const SelectboxesRenderer: React.FC<ComponentRenderProps> = ({
     };
     onChange(newValue);
   };
-
+  const {translate} = useI18n()
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={styles.label}>{translate(label)}</Text>}
       <View style={styles.checkboxGroup}>
         {options.map((option) => {
           const isSelected = selectedValues[String(option.value)];

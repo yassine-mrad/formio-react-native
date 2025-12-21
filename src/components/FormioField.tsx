@@ -51,6 +51,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       marginBottom: getComponent('label.marginBottom', 8),
       color: getComponent('label.color') || getColor('text', '#333'),
       textAlign: isRTL ? 'right' : 'left',
+      width:'100%'
     },
     input: {
       borderWidth: getComponent('input.borderWidth', 1),
@@ -126,14 +127,14 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
   return (
     <View style={themedStyles.fieldContainer}>
       {translatedLabel && (
-        <Text style={themedStyles.label}>
+        <Text style={[themedStyles.label]}>
           {translatedLabel}
-          {required && <Text style={[styles.required, { color: getColor('error') }]}> *</Text>}
+          {required && <Text style={[themedStyles.required, { color: getColor('error') }]}> *</Text>}
         </Text>
       )}
       {renderField()}
       {component.description ? (
-        <Text style={[styles.description, { color: getColor('textSecondary'), textAlign: isRTL ? 'right' : 'left' }]}>
+        <Text style={[themedStyles.description, { color: getColor('textSecondary'), textAlign: isRTL ? 'right' : 'left' }]}>
           {translate(component.description, component.description)}
         </Text>
       ) : null}

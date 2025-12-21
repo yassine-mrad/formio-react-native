@@ -10,6 +10,7 @@ import React from 'react';
 import { TextInput, StyleSheet, View, Text } from 'react-native';
 import { ComponentRenderProps } from '../../registry/ComponentRegistry';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
+import { useI18n } from '../../i18n/I18nContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -73,9 +74,9 @@ export const TextAreaRenderer: React.FC<ComponentRenderProps> = ({
   readOnly = false,
 }) => {
   const [state, setState] = React.useState<TextAreaState>({ isFocused: false });
-  const { label, placeholder, maxLength } = component;
+  const {  placeholder, maxLength } = component;
   const currentLength = String(value || '').length;
-
+  const {translate} = useI18n()
   const inputStyle = [
     styles.input,
     state.isFocused && styles.inputFocused,
@@ -85,10 +86,9 @@ export const TextAreaRenderer: React.FC<ComponentRenderProps> = ({
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
         style={inputStyle}
-        placeholder={placeholder}
+        placeholder={translate(placeholder)}
         placeholderTextColor={COLORS.placeholder}
         value={String(value || '')}
         onChangeText={onChange}

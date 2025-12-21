@@ -54,13 +54,13 @@ const CheckboxRendererComponent: React.FC<ComponentRenderProps> = ({
   readOnly = false,
 }) => {
   const { label } = component;
-  const { isRTL } = useI18n();
+  const { isRTL, translate } = useI18n();
   const isChecked = Boolean(value);
 
   return (
     <View style={styles.container}>
       <View style={[styles.checkboxContainer, { flexDirection: getFlexDirection(isRTL) }]}>
-        <View {...getCheckboxAriaAttributes(label || '', isChecked, disabled || readOnly)}>
+        <View {...getCheckboxAriaAttributes(translate(label || ''), isChecked, disabled || readOnly)}>
           <Switch
             value={isChecked}
             onValueChange={onChange}

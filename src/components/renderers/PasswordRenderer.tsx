@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { TextInput, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { ComponentRenderProps } from '../../registry/ComponentRegistry';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
+import { useI18n } from '../../i18n/I18nContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -76,6 +77,7 @@ export const PasswordRenderer: React.FC<ComponentRenderProps> = ({
     showPassword: false,
   });
   const { placeholder } = component;
+  const {translate} = useI18n();
 
   const inputWrapperStyle = [
     styles.inputWrapper,
@@ -89,7 +91,7 @@ export const PasswordRenderer: React.FC<ComponentRenderProps> = ({
       <View style={inputWrapperStyle}>
         <TextInput
           style={styles.input}
-          placeholder={placeholder || 'Enter password'}
+          placeholder={translate(placeholder) || translate('Enter password')}
           placeholderTextColor={COLORS.placeholder}
           value={String(value || '')}
           onChangeText={onChange}

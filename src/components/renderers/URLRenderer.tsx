@@ -10,6 +10,7 @@ import React from 'react';
 import { TextInput, StyleSheet, View, Text } from 'react-native';
 import { ComponentRenderProps } from '../../registry/ComponentRegistry';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../constants';
+import { useI18n } from '../../i18n/I18nContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -66,12 +67,12 @@ export const URLRenderer: React.FC<ComponentRenderProps> = ({
     error && styles.inputError,
     disabled && styles.inputDisabled,
   ];
-
+  const {translate} = useI18n()
   return (
     <View style={styles.container}>
       <TextInput
         style={inputStyle}
-        placeholder={placeholder || 'Enter URL'}
+        placeholder={translate(placeholder || 'Enter URL')}
         placeholderTextColor={COLORS.placeholder}
         value={String(value || '')}
         onChangeText={onChange}

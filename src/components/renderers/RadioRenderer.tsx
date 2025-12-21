@@ -81,7 +81,7 @@ const RadioRendererComponent: React.FC<ComponentRenderProps> = ({
   readOnly = false,
 }) => {
 
-  const { isRTL } = useI18n();
+  const { isRTL,translate } = useI18n();
   const options = parseOptions(component.data?.values || component.values || []);
 
   return (
@@ -112,7 +112,7 @@ const RadioRendererComponent: React.FC<ComponentRenderProps> = ({
                 { textAlign: getTextAlign(isRTL) },
               ]}
             >
-              {option.label}
+              {translate(option.label)}
             </Text>
           </TouchableOpacity>
         ))}
