@@ -1,191 +1,214 @@
-import React, { useState } from 'react';
-import { SafeAreaView, Alert, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
-import { FormioForm, FormioProvider } from 'formio-react-native';
+import React from 'react';
+import {
+  Alert,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  StatusBar,
+  TouchableOpacity,
+} from 'react-native';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import { FormioForm, FormioProvider, useI18n } from 'formio-react-native';
 
 const customTranslations = {
   fr: {
-    'Contact Form': 'Formulaire de Contact',
     'First Name': 'Prénom',
-    'Last Name': 'Nom de famille',
-    'Email Address': 'Adresse e-mail',
-    'Age': 'Âge',
-    'Country': 'Pays',
-    'Message': 'Message',
-    'Submit Form': 'Soumettre le formulaire',
     'Enter your first name': 'Entrez votre prénom',
-    'Enter your last name': 'Entrez votre nom de famille',
-    'Enter your email': 'Entrez votre e-mail',
-    'Enter your age': 'Entrez votre âge',
-    'Enter your message': 'Entrez votre message',
-    'United States': 'États-Unis',
-    'Canada': 'Canada',
-    'United Kingdom': 'Royaume-Uni',
-    'Australia': 'Australie',
-    'Select...': 'Sélectionner...',
-    'Loading...': 'Chargement...',
-    'No options available': 'Aucune option disponible',
-    'Search...': 'Rechercher...'
   },
   ar: {
-    'Contact Form': 'نموذج الاتصال',
     'First Name': 'الاسم الأول',
-    'Last Name': 'اسم العائلة',
-    'Email Address': 'عنوان البريد الإلكتروني',
-    'Age': 'العمر',
-    'Country': 'البلد',
-    'Message': 'الرسالة',
-    'Submit Form': 'إرسال النموذج',
     'Enter your first name': 'أدخل اسمك الأول',
-    'Enter your last name': 'أدخل اسم عائلتك',
-    'Enter your email': 'أدخل بريدك الإلكتروني',
-    'Enter your age': 'أدخل عمرك',
-    'Enter your message': 'أدخل رسالتك',
-    'United States': 'الولايات المتحدة',
-    'Canada': 'كندا',
-    'United Kingdom': 'المملكة المتحدة',
-    'Australia': 'أستراليا',
-    'Select...': 'اختر...',
-    'Loading...': 'جاري التحميل...',
-    'No options available': 'لا توجد خيارات متاحة',
-    'Search...': 'بحث...'
-  }
+  },
+  en: {
+    'First Name': 'First Name',
+    'Enter your first name': 'Enter your first name',
+  },
 };
 
-const sampleForm = {
-  title: 'Contact Form',
-  components: [
-    {
-      type: 'textfield',
-      key: 'firstName',
-      label: 'First Name',
-      placeholder: 'Enter your first name',
-      required: true,
-      input: true,
-    },
-    {
-      type: 'textfield',
-      key: 'lastName',
-      label: 'Last Name',
-      placeholder: 'Enter your last name',
-      required: true,
-      input: true
-    },
-    {
-      type: 'email',
-      key: 'email',
-      label: 'Email Address',
-      placeholder: 'Enter your email',
-      required: true,
-      input: true
-    },
-    {
-      type: 'number',
-      key: 'age',
-      label: 'Age',
-      placeholder: 'Enter your age',
-      input: true
-    },
-    {
-      type: 'select',
-      key: 'country',
-      label: 'Country',
-      required: true,
-      input: true,
-      data: {
-        values: [
-          { label: 'United States', value: 'us' },
-          { label: 'Canada', value: 'ca' },
-          { label: 'United Kingdom', value: 'uk' },
-          { label: 'Australia', value: 'au' }
-        ]
-      }
-    },
-    {
-      type: 'textarea',
-      key: 'message',
-      label: 'Message',
-      placeholder: 'Enter your message',
-      input: true
-    },
-    {
-      type: 'button',
-      key: 'submit',
-      label: 'Submit Form'
-    }
-  ]
-};
+export default function App() {
+  const isDarkMode = useColorScheme() === 'dark';
 
-export default function I18nExample() {
-  const [language, setLanguage] = useState('en');
+  return (
+    <SafeAreaProvider>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? '#18181B' : '#F3F4F6'} />
+      <FormioProvider
+        i18n={{
+          language: 'en',
+          translations: customTranslations,
+          rtlLanguages: ['ar', 'he', 'fa', 'ur'],
+        }}
+      >
+        <AppContent isDarkMode={isDarkMode} />
+      </FormioProvider>
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent({ isDarkMode }: { isDarkMode: boolean }) {
+  const safeAreaInsets = useSafeAreaInsets();
+  const { setLanguage, language } = useI18n();
 
   const handleSubmit = (data: any) => {
     Alert.alert('Form Submitted', JSON.stringify(data, null, 2));
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.languageSelector}>
-        <TouchableOpacity 
-          style={[styles.langButton, language === 'en' && styles.activeLang]} 
-          onPress={() => setLanguage('en')}
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: safeAreaInsets.top,
+          paddingBottom: safeAreaInsets.bottom,
+          paddingLeft: safeAreaInsets.left,
+          paddingRight: safeAreaInsets.right,
+          backgroundColor: '#F3F4F6',
+        },
+      ]}
+    >
+      <View style={styles.flex1}>
+        <LanguageSwitcher language={language} setLanguage={setLanguage} isDarkMode={isDarkMode} />
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          keyboardShouldPersistTaps="handled"
+          style={styles.flex1}
         >
-          <Text style={styles.langText}>English</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.langButton, language === 'fr' && styles.activeLang]} 
-          onPress={() => setLanguage('fr')}
-        >
-          <Text style={styles.langText}>Français</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.langButton, language === 'ar' && styles.activeLang]} 
-          onPress={() => setLanguage('ar')}
-        >
-          <Text style={styles.langText}>العربية</Text>
-        </TouchableOpacity>
-      </View>
+          <View
       
-      <FormioProvider
-        i18n={{
-          language,
-          translations: customTranslations
-        }}
-      >
-        <FormioForm
-          form={sampleForm}
-          onSubmit={handleSubmit}
-        />
-      </FormioProvider>
-    </SafeAreaView>
+            
+          >
+       
+            <View >
+              <FormioForm
+                form={{
+                  components: [
+                    {
+                      type: 'textfield',
+                      key: 'firstName',
+                      label: 'First Name',
+                      placeholder: 'Enter your first name',
+                      inputType: 'text',
+                      validate: { required: true },
+                    },
+                  ],
+                }}
+                onSubmit={handleSubmit}
+                options={{
+                  // can add options to further enhance later
+                }}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    </View>
+  );
+}
+
+function LanguageSwitcher({
+  language,
+  setLanguage,
+  isDarkMode,
+}: {
+  language: string;
+  setLanguage: (lang: string) => void;
+  isDarkMode: boolean;
+}) {
+  const languages = [
+    { code: 'en', label: 'English' },
+    { code: 'fr', label: 'Français' },
+    { code: 'ar', label: 'العربية' },
+  ];
+
+  return (
+    <View style={styles.languageSwitcherContainer}>
+      {languages.map((lang) => (
+        <TouchableOpacity
+          key={lang.code}
+          style={[
+            styles.languageButton,
+            {
+              backgroundColor:
+                lang.code === language
+                  ? (isDarkMode ? '#6366F1' : '#4338CA')
+                  : (isDarkMode ? '#27272A' : '#E5E7EB'),
+              borderWidth: lang.code === language ? 2 : 1,
+              borderColor: lang.code === language ? '#A5B4FC' : (isDarkMode ? '#52525B' : '#D1D5DB'),
+            },
+          ]}
+          onPress={() => setLanguage(lang.code)}
+          activeOpacity={0.8}
+        >
+          <Text
+            style={[
+              styles.languageButtonText,
+              {
+                color: lang.code === language
+                  ? '#fff'
+                  : (isDarkMode ? '#E4E4E7' : '#1F2937'),
+                fontWeight: lang.code === language ? 'bold' : 'normal',
+              },
+            ]}
+          >
+            {lang.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    // backgroundColor handled inline
   },
-  languageSelector: {
+  flex1: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
+  formContainer: {
+    borderRadius: 16,
+    padding: 24,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    elevation: 4,
+    width: '100%',
+    maxWidth: 400,
+    marginVertical: 32,
+  },
+  formTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 18,
+    textAlign: 'center',
+    letterSpacing: 1,
+  },
+  languageSwitcherContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
-    gap: 10,
+    marginTop: 18,
+    marginBottom: 8,
+    alignItems: 'center',
   },
-  langButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#ddd',
+  languageButton: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginHorizontal: 5,
   },
-  activeLang: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+  languageButtonText: {
+    fontSize: 16,
+    letterSpacing: 0.25,
   },
-  langText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+  formioFormWrapper: {
+    marginVertical: 8,
   },
 });
