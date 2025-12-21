@@ -32,7 +32,8 @@ const getOptions = (component: FormioComponent): Array<{ label: string; value: a
 };
 
 export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onChange, error }) => {
-  const { type, key, label, placeholder, required, disabled } = component;
+  const { type, key, label, placeholder, disabled } = component;
+  const required = component.required || component.validate?.required;
   const { createStyles, getColor, getComponent } = useTheme();
   const { translate, isRTL } = useI18n();
   const formioContext = useFormioContext();
@@ -44,14 +45,14 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
   const themedStyles = createStyles((theme) => ({
     fieldContainer: {
       marginBottom: getComponent('container.marginBottom', 16),
+      direction: isRTL ? 'rtl' : 'ltr',
     },
     label: {
       fontSize: getComponent('label.fontSize', 16),
       fontWeight: getComponent('label.fontWeight', '500') as any,
       marginBottom: getComponent('label.marginBottom', 8),
       color: getComponent('label.color') || getColor('text', '#333'),
-      textAlign: isRTL ? 'right' : 'left',
-      width:'100%'
+
     },
     input: {
       borderWidth: getComponent('input.borderWidth', 1),
