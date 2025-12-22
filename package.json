@@ -11,7 +11,13 @@
     "build": "bob build && yarn build:cleanup",
     "build:cleanup": "node scripts/cleanup.js",
     "prepare": "bob build",
-    "prepack": "bob build"
+    "prepack": "bob build",
+    "version:beta": "npm version preminor --preid=beta",
+    "version:prerelease": "npm version prerelease",
+    "publish:beta": "npm publish --tag beta",
+    "publish:latest": "npm publish",
+    "release:beta": "npm run version:beta && npm run publish:beta",
+    "release:latest": "npm run publish:latest"
   },
   "keywords": [
     "react-native",
@@ -77,7 +83,7 @@
       ]
     ]
   },
-    "repository": {
+  "repository": {
     "type": "git",
     "url": "https://github.com/yassine-mrad/formio-react-native.git"
   },

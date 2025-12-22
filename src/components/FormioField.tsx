@@ -36,7 +36,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
   const { createStyles, getColor, getComponent } = useTheme();
   const { translate, isRTL } = useI18n();
   const formioContext = useFormioContext();
-  
+
   const translatedLabel = translate(label || '', label);
   const translatedPlaceholder = translate(placeholder || '', placeholder);
   const translatedError = translate(error || '', error);
@@ -51,7 +51,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       marginBottom: getComponent('label.marginBottom', 8),
       color: getComponent('label.color') || getColor('text', '#333'),
       textAlign: isRTL ? 'right' : 'left',
-      width:'100%'
+      width: '100%'
     },
     input: {
       borderWidth: getComponent('input.borderWidth', 1),
@@ -60,7 +60,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
       padding: getComponent('input.padding', 12),
       fontSize: getComponent('input.fontSize', 16),
       minHeight: getComponent('input.minHeight', 44),
-      backgroundColor: disabled 
+      backgroundColor: disabled
         ? getColor('disabled', '#f0f0f0')
         : getColor('background', '#fff'),
       textAlign: isRTL ? 'right' : 'left',
@@ -80,17 +80,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
     if (overrides) {
       Object.entries(overrides).forEach(([t, override]) => {
         if (override && typeof override === 'function') {
-          reg.register(t, (props: any) => {
-            return override(props.component, {
-              value: props.value,
-              onChange: props.onChange,
-              error: props.error,
-              disabled: props.disabled,
-              readOnly: props.readOnly,
-              formData: props.formData,
-              validationErrors: props.validationErrors,
-            } as any);
-          });
+          reg.register(t, override);
         }
       });
     }
@@ -114,7 +104,7 @@ export const FormioField: React.FC<FormioFieldProps> = ({ component, value, onCh
     }
 
     // Fallback: unknown type
-    return <FallbackRenderer component={component} value={value} onChange={(v:any)=>onChange(key,v)} error={translatedError} disabled={disabled} />;
+    return <FallbackRenderer component={component} value={value} onChange={(v: any) => onChange(key, v)} error={translatedError} disabled={disabled} />;
   };
 
   if (component.input === false) return null;

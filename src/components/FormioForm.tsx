@@ -93,13 +93,13 @@ export const FormioForm: React.FC<FormProps> = ({
 }) => {
   const context = useFormioContext();
   const { translate, isRTL } = useI18n();
-  
+
   // Merge overrides: prop components > context components > built-in
   const componentOverrides = {
     ...context?.componentOverrides,
     ...propComponents
   };
-  
+
   const theme = context?.theme;
   const [formData, setFormData] = useState<FormData>(initialData);
   const [errors, setErrors] = useState<ValidationError[]>([]);
@@ -111,20 +111,20 @@ export const FormioForm: React.FC<FormProps> = ({
         {form.title && <Text style={styles.title}>{form.title}</Text>}
         <Wizard
           form={form}
-           // @ts-ignore
+          // @ts-ignore
           component={{ type: 'wizard', key: 'wizard', pages: form.components }}
           data={formData}
           setData={setFormData}
           errors={errors}
           onValidation={setErrors}
           onFinish={() => {
-              const validationErrors = validateForm(form.components, formData, { translate });
-              if (validationErrors.length === 0) {
-                onSubmit?.(formData);
-              } else {
-                setErrors(validationErrors);
-              }
-            }}
+            const validationErrors = validateForm(form.components, formData, { translate });
+            if (validationErrors.length === 0) {
+              onSubmit?.(formData);
+            } else {
+              setErrors(validationErrors);
+            }
+          }}
         />
       </ScrollView>
     );
@@ -172,18 +172,19 @@ export const FormioForm: React.FC<FormProps> = ({
     if (isHidden(component, formData)) return null;
 
     // Check for custom renderer in order of precedence
-    const customRenderer = 
+    const customRenderer =
       componentOverrides?.[component.type] ||
       componentOverrides?.[component.key]; // Allow key-specific overrides
 
     if (customRenderer) {
-      return customRenderer(component, {
+      return customRenderer({
+        component,
         value: formData[component.key],
         onChange: (value) => handleFieldChange(component.key, value),
         error: getFieldError(component.key),
         disabled: component.disabled || false,
         readOnly: options?.readOnly || false,
-        formData
+        formData,
       });
     }
 
@@ -313,18 +314,18 @@ export const FormioForm: React.FC<FormProps> = ({
         );
       case 'select': {
 
-          return (
-            <ResourceSelect
-              key={component.key}
-              // @ts-ignore
-              component={component as any}
-              value={formData[component.key]}
-              onChange={(val) => handleFieldChange(component.key, val)}
-              error={getFieldError(component.key)}
-              disabled={(component as any).disabled}
-              readOnly={options?.readOnly}
-            />
-          );
+        return (
+          <ResourceSelect
+            key={component.key}
+            // @ts-ignore
+            component={component as any}
+            value={formData[component.key]}
+            onChange={(val) => handleFieldChange(component.key, val)}
+            error={getFieldError(component.key)}
+            disabled={(component as any).disabled}
+            readOnly={options?.readOnly}
+          />
+        );
       }
       case 'PlatformFileInput':
         return (

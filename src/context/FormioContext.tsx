@@ -2,23 +2,8 @@ import React, { createContext, useContext, ReactNode, useState, useCallback } fr
 import { FormioComponent } from '../types';
 import { I18nConfig } from '../i18n/types';
 import { I18nProvider } from '../i18n/I18nContext';
-import { ComponentRegistry, createRegistryWithComponents } from '../registry';
+import { ComponentRegistry, createRegistryWithComponents, ComponentRenderer, ComponentRenderProps } from '../registry';
 import { DEFAULT_RENDERERS } from '../components/renderers';
-
-export type ComponentRenderer = (
-  component: FormioComponent,
-  props: ComponentRenderProps
-) => ReactNode;
-
-export interface ComponentRenderProps {
-  value: any;
-  onChange: (value: any) => void;
-  error?: string;
-  disabled?: boolean;
-  readOnly?: boolean;
-  formData?: Record<string, any>;
-}
-
 export interface ComponentOverrides {
   // Input components
   textfield?: ComponentRenderer;
@@ -28,38 +13,38 @@ export interface ComponentOverrides {
   phoneNumber?: ComponentRenderer;
   url?: ComponentRenderer;
   password?: ComponentRenderer;
-  
+
   // Selection components
   select?: ComponentRenderer;
   checkbox?: ComponentRenderer;
   radio?: ComponentRenderer;
   selectboxes?: ComponentRenderer;
-  
+
   // Date/Time components
   datetime?: ComponentRenderer;
   date?: ComponentRenderer;
   time?: ComponentRenderer;
   day?: ComponentRenderer;
-  
+
   // File components
   file?: ComponentRenderer;
-  
+
   // Layout components
   panel?: ComponentRenderer;
   container?: ComponentRenderer;
   columns?: ComponentRenderer;
   fieldset?: ComponentRenderer;
   well?: ComponentRenderer;
-  
+
   // Action components
   button?: ComponentRenderer;
-  
+
   // Advanced components
   datagrid?: ComponentRenderer;
   editgrid?: ComponentRenderer;
   tree?: ComponentRenderer;
   wizard?: ComponentRenderer;
-  
+
   // Custom components
   [customType: string]: ComponentRenderer | undefined;
 }
@@ -81,7 +66,7 @@ export interface FormioTheme {
     disabled?: string;
     placeholder?: string;
   };
-  
+
   spacing?: {
     xs?: number;
     sm?: number;
@@ -89,7 +74,7 @@ export interface FormioTheme {
     lg?: number;
     xl?: number;
   };
-  
+
   typography?: {
     fontFamily?: string;
     fontSize?: {
@@ -111,7 +96,7 @@ export interface FormioTheme {
       relaxed?: number;
     };
   };
-  
+
   borderRadius?: {
     none?: number;
     sm?: number;
@@ -119,13 +104,13 @@ export interface FormioTheme {
     lg?: number;
     full?: number;
   };
-  
+
   shadows?: {
     sm?: object;
     md?: object;
     lg?: object;
   };
-  
+
   components?: {
     input?: {
       borderRadius?: number;
@@ -134,20 +119,20 @@ export interface FormioTheme {
       fontSize?: number;
       minHeight?: number;
     };
-    
+
     label?: {
       fontSize?: number;
       fontWeight?: string;
       marginBottom?: number;
       color?: string;
     };
-    
+
     error?: {
       fontSize?: number;
       color?: string;
       marginTop?: number;
     };
-    
+
     button?: {
       borderRadius?: number;
       padding?: number;
@@ -155,7 +140,7 @@ export interface FormioTheme {
       fontWeight?: string;
       minHeight?: number;
     };
-    
+
     container?: {
       padding?: number;
       marginBottom?: number;
@@ -280,7 +265,7 @@ const getNestedValue = (obj: any, path: string, fallback?: any): any => {
 
 const mergeTheme = (base: FormioTheme, override?: FormioTheme): FormioTheme => {
   if (!override) return base;
-  
+
   return {
     colors: { ...base.colors, ...override.colors },
     spacing: { ...base.spacing, ...override.spacing },
@@ -321,17 +306,8 @@ export const FormioProvider: React.FC<FormioProviderProps> = ({
     if (initialComponents) {
       Object.entries(initialComponents).forEach(([t, override]) => {
         if (override && typeof override === 'function') {
-          reg.register(t, (props: any) => {
-            return override(props.component, {
-              value: props.value,
-              onChange: props.onChange,
-              error: props.error,
-              disabled: props.disabled,
-              readOnly: props.readOnly,
-              formData: props.formData,
-              validationErrors: props.validationErrors,
-            } as any);
-          });
+          // Direct registration since styles are unified
+          reg.register(t, override);
         }
       });
     }
@@ -341,17 +317,7 @@ export const FormioProvider: React.FC<FormioProviderProps> = ({
   const registerComponent = useCallback((type: string, renderer: ComponentRenderer) => {
     setComponentOverrides(prev => ({ ...prev, [type]: renderer }));
     if (registry) {
-      registry.register(type, (props: any) => {
-        return renderer(props.component, {
-          value: props.value,
-          onChange: props.onChange,
-          error: props.error,
-          disabled: props.disabled,
-          readOnly: props.readOnly,
-          formData: props.formData,
-          validationErrors: props.validationErrors,
-        } as any);
-      });
+      registry.register(type, renderer);
     }
   }, [registry]);
 
